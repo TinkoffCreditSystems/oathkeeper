@@ -345,6 +345,7 @@ func (d *RequestHandler) InitializeAuthnSession(r *http.Request, rl *rule.Rule) 
 			Warn("Unable to capture the groups for the MatchContext")
 	} else {
 		session.MatchContext = authn.MatchContext{
+			Method:              r.Method,
 			RegexpCaptureGroups: values,
 			URL:                 r.URL,
 		}
