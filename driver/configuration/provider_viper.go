@@ -67,6 +67,8 @@ const (
 	ViperKeyAuthorizerRemoteIsEnabled = "authorizers.remote.enabled"
 
 	ViperKeyAuthorizerRemoteJSONIsEnabled = "authorizers.remote_json.enabled"
+
+	ViperKeyAuthorizerOPAIsEnabled = "authorizers.opa.enabled"
 )
 
 // Mutators

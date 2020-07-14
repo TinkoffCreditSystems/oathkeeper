@@ -859,6 +859,49 @@
       ],
       "additionalProperties": false
     },
+    "configAuthorizersOPA": {
+      "type": "object",
+      "title": "OPA Configuration",
+      "description": "This section is optional when the authorizer is disabled.",
+      "properties": {
+        "endpoint": {
+          "title": "OPA endpoint URL",
+          "type": "string",
+          "format": "uri",
+          "description": "The URL of OPA query API endpoint. The OPA is expected to return 200 OK with application/json body containing result.{allow,deny} fields.\n\n>If this authorizer is enabled, this value is required.",
+          "examples": [
+            "https://opa-host/v1/data/pkg-name"
+          ]
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "examples": [
+              [
+                "application/x-yaml"
+              ]
+            ]
+          }
+        },
+        "payload": {
+          "title": "OPA Payload",
+          "type": "string",
+          "description": "The payload of the request sent to the OPA. The string will be parsed by the Go text/template package and applied to an AuthenticationSession object.\n\n>If this authorizer is enabled, this value is required.",
+          "examples": [
+            "input:\n  subject: \"{{ .Subject }}\"\n  method: \"{{ .MatchContext.Method }}\"\n  path: [{{ range (split \"/\" (index .MatchContext.RegexpCaptureGroups 0)) -}} {{ if . -}} \"{{.}}\", {{- end }} {{- end }}]"
+          ]
+        }
+      },
+      "required": [
+        "endpoint",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
     "configMutatorsCookie": {
       "type": "object",
       "title": "Cookie Mutator Configuration",
@@ -1558,6 +1601,38 @@
                 },
                 "config": {
                   "$ref": "#/definitions/configAuthorizersRemoteJSON"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            },
+            {
+              "properties": {
+                "enabled": {
+                  "const": false
+                }
+              }
+            }
+          ]
+        },
+        "opa": {
+          "title": "OPA",
+          "description": "The [`opa` authorizer](https://www.ory.sh/oathkeeper/docs/pipeline/authz#opa).",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "$ref": "#/definitions/handlerSwitch"
+            }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "enabled": {
+                  "const": true
+                },
+                "config": {
+                  "$ref": "#/definitions/configAuthorizersOPA"
                 }
               },
               "required": [
