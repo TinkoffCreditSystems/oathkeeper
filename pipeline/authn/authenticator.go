@@ -47,6 +47,7 @@ type AuthenticationSession struct {
 }
 
 type MatchContext struct {
+	Method              string   `json:"method"`
 	RegexpCaptureGroups []string `json:"regexp_capture_groups"`
 	URL                 *url.URL `json:"url"`
 }

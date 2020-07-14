@@ -49,6 +49,7 @@ func TestCopy(t *testing.T) {
 		Extra:   map[string]interface{}{"a": "b", "b": map[string]string{"a:": "b"}},
 		Header:  http.Header{"foo": {"bar", "baz"}},
 		MatchContext: authn.MatchContext{
+			Method:              http.MethodGet,
 			RegexpCaptureGroups: []string{"a", "b"},
 			URL:                 urlx.ParseOrPanic("https://foo/bar"),
 		},
@@ -58,12 +59,14 @@ func TestCopy(t *testing.T) {
 	copied.Subject = "ba"
 	copied.Extra["baz"] = "bar"
 	copied.Header.Add("bazbar", "bar")
+	copied.MatchContext.Method = http.MethodHead
 	copied.MatchContext.URL.Host = "asdf"
 	copied.MatchContext.RegexpCaptureGroups[0] = "b"
 
 	assert.NotEqual(original.Subject, copied.Subject)
 	assert.NotEqual(original.Extra, copied.Extra)
 	assert.NotEqual(original.Header, copied.Header)
+	assert.NotEqual(original.MatchContext.Method, copied.MatchContext.Method)
 	assert.NotEqual(original.MatchContext.URL.Host, copied.MatchContext.URL.Host)
 	assert.NotEqual(original.MatchContext.RegexpCaptureGroups, copied.MatchContext.RegexpCaptureGroups)
 }
