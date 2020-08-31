@@ -22,7 +22,9 @@ package proxy
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/errorsx"
@@ -336,6 +338,25 @@ func (d *RequestHandler) InitializeAuthnSession(r *http.Request, rl *rule.Rule) 
 		Subject: "",
 	}
 
+	upstreamReq := map[string]interface{}{}
+	upstreamReq["method"] = r.Method
+	upstreamReq["path"] = r.URL.Path
+	upstreamReq["query"] = r.URL.Query()
+
+	body, isBodyTruncated, err := getParsedBody(r)
+	if err != nil {
+		d.r.Logger().WithError(err).
+			WithField("rule_id", rl.ID).
+			WithField("access_url", r.URL.String()).
+			WithField("reason_id", "query_parse_error").
+			Warn("Unable to parse request body")
+		return session
+	}
+
+	upstreamReq["body"] = body
+	upstreamReq["is_body_truncated"] = isBodyTruncated
+	session.UpstreamRequest = upstreamReq
+
 	values, err := rl.ExtractRegexGroups(d.c.AccessRuleMatchingStrategy(), r.URL)
 	if err != nil {
 		d.r.Logger().WithError(err).
@@ -345,11 +366,36 @@ func (d *RequestHandler) InitializeAuthnSession(r *http.Request, rl *rule.Rule) 
 			Warn("Unable to capture the groups for the MatchContext")
 	} else {
 		session.MatchContext = authn.MatchContext{
-			Method:              r.Method,
 			RegexpCaptureGroups: values,
 			URL:                 r.URL,
 		}
 	}
 
 	return session
+}
+
+func getParsedBody(req *http.Request) (interface{}, bool, error) {
+	body := req.Body
+
+	if body == nil {
+		return nil, false, nil
+	}
+
+	var data interface{}
+
+	if req.ContentLength >= 0 {
+		if strings.Contains(req.Header.Get("content-type"), "application/json") {
+			body, err := ioutil.ReadAll(body)
+			if err != nil {
+				return nil, false, err
+			}
+
+			err = json.Unmarshal(body, &data)
+			if err != nil {
+				return nil, false, err
+			}
+		}
+	}
+
+	return data, false, nil
 }
