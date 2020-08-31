@@ -5,7 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"text/template"
 
 	"github.com/ory/x/httpx"
@@ -37,6 +39,15 @@ type opaResponsePayload struct {
 	} `json:"result"`
 }
 
+type OpaInput struct {
+	*authn.AuthenticationSession
+	UpstreamRequest map[string]interface{} `json:"upstream_request"`
+}
+
+type OpaRequest struct {
+	Input *OpaInput `json:"input"`
+}
+
 func (p opaResponsePayload) Forbidden() bool {
 	return p.Result.Deny != "" || !p.Result.Allow
 }
@@ -66,28 +77,36 @@ func (a *AuthorizerOPA) GetID() string {
 }
 
 // Authorize implements the Authorizer interface.
-func (a *AuthorizerOPA) Authorize(_ *http.Request, session *authn.AuthenticationSession, config json.RawMessage, _ pipeline.Rule) error {
+func (a *AuthorizerOPA) Authorize(r *http.Request, session *authn.AuthenticationSession, config json.RawMessage, _ pipeline.Rule) error {
 	c, err := a.Config(config)
 	if err != nil {
 		return err
 	}
 
-	templateID := c.PayloadTemplateID()
-	t := a.t.Lookup(templateID)
-	if t == nil {
-		var err error
-		t, err = a.t.New(templateID).Parse(c.Payload)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	}
+	upstreamReq := map[string]interface{}{}
+	upstreamReq["method"] = r.Method
+	upstreamReq["path"] = r.URL.Path
+	upstreamReq["query"] = r.URL.Query()
 
-	var body bytes.Buffer
-	if err := t.Execute(&body, session); err != nil {
+	parsedBody, isBodyTruncated, err := getParsedBody(r)
+	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	req, err := http.NewRequest("POST", c.Endpoint, &body)
+	upstreamReq["body"] = parsedBody
+	upstreamReq["is_body_truncated"] = isBodyTruncated
+
+	input := &OpaInput{AuthenticationSession: session, UpstreamRequest: upstreamReq}
+	opaReq := &OpaRequest{
+		Input: input,
+	}
+	jsonInput, err := json.Marshal(opaReq)
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	req, err := http.NewRequest("POST", c.Endpoint, bytes.NewReader(jsonInput))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -107,7 +126,11 @@ func (a *AuthorizerOPA) Authorize(_ *http.Request, session *authn.Authentication
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return errors.Errorf("expected status code %d but got %d", http.StatusOK, res.StatusCode)
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.Errorf("expected status code %d but got %d %v", http.StatusOK, res.StatusCode, string(body))
 	}
 
 	var respPayload opaResponsePayload
@@ -146,4 +169,30 @@ func (a *AuthorizerOPA) Config(config json.RawMessage) (*AuthorizerOPAConfigurat
 	}
 
 	return &c, nil
+}
+
+func getParsedBody(req *http.Request) (interface{}, bool, error) {
+	body := req.Body
+
+	if body == nil {
+		return nil, false, nil
+	}
+
+	var data interface{}
+
+	if req.ContentLength >= 0 {
+		if strings.Contains(req.Header.Get("content-type"), "application/json") {
+			body, err := ioutil.ReadAll(body)
+			if err != nil {
+				return nil, false, err
+			}
+
+			err = json.Unmarshal(body, &data)
+			if err != nil {
+				return nil, false, err
+			}
+		}
+	}
+
+	return data, false, nil
 }

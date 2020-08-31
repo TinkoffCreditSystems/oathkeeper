@@ -886,19 +886,10 @@
               ]
             ]
           }
-        },
-        "payload": {
-          "title": "OPA Payload",
-          "type": "string",
-          "description": "The payload of the request sent to the OPA. The string will be parsed by the Go text/template package and applied to an AuthenticationSession object.\n\n>If this authorizer is enabled, this value is required.",
-          "examples": [
-            "input:\n  subject: \"{{ .Subject }}\"\n  method: \"{{ .MatchContext.Method }}\"\n  path: [{{ range (split \"/\" (index .MatchContext.RegexpCaptureGroups 0)) -}} {{ if . -}} \"{{.}}\", {{- end }} {{- end }}]"
-          ]
         }
       },
       "required": [
-        "endpoint",
-        "payload"
+        "endpoint"
       ],
       "additionalProperties": false
     },

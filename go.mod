@@ -32,6 +32,7 @@ require (
 	github.com/lib/pq v1.3.0
 	github.com/mattn/goveralls v0.0.5
 	github.com/mitchellh/copystructure v1.0.0
+	github.com/open-policy-agent/opa v0.23.2
 	github.com/ory/analytics-go/v4 v4.0.1
 	github.com/ory/cli v0.0.10
 	github.com/ory/fosite v0.29.2
@@ -65,6 +66,7 @@ require (
 	golang.org/x/tools v0.0.0-20200325203130-f53864d0dba1
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
+	gopkg.in/yaml.v2 v2.3.0
 )
 
 go 1.14
