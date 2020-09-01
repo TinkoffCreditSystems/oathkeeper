@@ -42,7 +42,7 @@ func TestAuthorizerOPAAuthorize(t *testing.T) {
 		{
 			name:    "unknown field",
 			session: &authn.AuthenticationSession{},
-			config:  json.RawMessage(`{"endpoint":"http://host/path","payload":"{{ .foo }}"}`),
+			config:  json.RawMessage(`{"endpoint":"http://host/path","payload":"{{ local input = std.extVar('unknown'); }}"}`),
 			wantErr: true,
 		},
 		{
@@ -85,7 +85,7 @@ func TestAuthorizerOPAValidate(t *testing.T) {
 			name:    "missing payload",
 			enabled: true,
 			config:  json.RawMessage(`{"endpoint":"http://host/path"}`),
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "missing endpoint",
@@ -102,7 +102,7 @@ func TestAuthorizerOPAValidate(t *testing.T) {
 		{
 			name:    "valid configuration",
 			enabled: true,
-			config:  json.RawMessage(`{"endpoint":"http://host/path","headers":{"key":["value"]},"payload":"{}"}`),
+			config:  json.RawMessage(`{"endpoint":"http://host/path","payload":"{}"}`),
 		},
 	}
 	for _, tt := range tests {

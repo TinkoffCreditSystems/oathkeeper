@@ -873,19 +873,13 @@
             "https://opa-host/v1/data/pkg-name"
           ]
         },
-        "headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "examples": [
-              [
-                "application/x-yaml"
-              ]
-            ]
-          }
+        "payload": {
+          "title": "Jsonnet template",
+          "type": "string",
+          "description": "The Jsonnet template that will be used for the request body in OPA. If not specified, the request body will be sent unchanged.",
+          "examples": [
+            "local input = std.extVar('input');\n\n{\n  identity: {}\n  + (if input.extra != null then {\n       id: input.extra.identity.id,\n       name: input.extra.identity.name,\n       given_name: input.extra.identity.given_name,\n       family_name: input.extra.identity.family_name,\n       preferred_username: input.extra.identity.preferred_username\n    } else {}),\n  request: {\n    path: input.match_context.url.Path\n  }\n}"
+          ]
         }
       },
       "required": [
