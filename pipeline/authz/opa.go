@@ -89,8 +89,11 @@ func (a *AuthorizerOPA) Authorize(r *http.Request, session *authn.Authentication
 
 	upstreamReq := map[string]interface{}{}
 	upstreamReq["method"] = r.Method
-	upstreamReq["path"] = r.URL.Path
-	upstreamReq["query"] = r.URL.Query()
+
+	if r.URL != nil {
+		upstreamReq["path"] = r.URL.Path
+		upstreamReq["query"] = r.URL.Query()
+	}
 
 	parsedBody, isBodyTruncated, err := getParsedBody(r)
 	if err != nil {
@@ -101,10 +104,7 @@ func (a *AuthorizerOPA) Authorize(r *http.Request, session *authn.Authentication
 	upstreamReq["is_body_truncated"] = isBodyTruncated
 
 	input := &OpaInput{AuthenticationSession: session, UpstreamRequest: upstreamReq}
-	opaReq := &OpaRequest{
-		Input: input,
-	}
-	jsonInput, err := json.Marshal(opaReq)
+	jsonInput, err := json.Marshal(input)
 
 	if err != nil {
 		return errors.WithStack(err)
@@ -113,6 +113,7 @@ func (a *AuthorizerOPA) Authorize(r *http.Request, session *authn.Authentication
 	jsonInputReader := bytes.NewReader(jsonInput)
 
 	if c.Payload != "" {
+		a.vm.ExtCode("input", string(jsonInput))
 		str, err := a.vm.EvaluateSnippet(templateID, c.Payload)
 
 		if err != nil {
