@@ -278,12 +278,6 @@ authorizers:
 
     config:
       endpoint: https://opa-host/v1/data/pkg-name
-      headers:
-        foo:
-          - bar
-      payload: |
-        input:
-          subject: {{ .Subject }}
 
 # All mutators can be configured under this configuration key
 mutators:

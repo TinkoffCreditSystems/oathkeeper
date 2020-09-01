@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"github.com/google/go-jsonnet"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -22,9 +23,8 @@ import (
 
 // AuthorizerOPAConfiguration represents a configuration for the opa authorizer.
 type AuthorizerOPAConfiguration struct {
-	Endpoint string      `json:"endpoint"`
-	Headers  http.Header `json:"headers"`
-	Payload  string      `json:"payload"`
+	Endpoint string `json:"endpoint"`
+	Payload  string `json:"payload"`
 }
 
 // PayloadTemplateID returns a string with which to associate the payload template.
@@ -60,6 +60,7 @@ type AuthorizerOPA struct {
 
 	client *http.Client
 	t      *template.Template
+	vm     *jsonnet.VM
 }
 
 // NewAuthorizerOPA creates a new AuthorizerOPA.
@@ -68,6 +69,7 @@ func NewAuthorizerOPA(c configuration.Provider) *AuthorizerOPA {
 		c:      c,
 		client: httpx.NewResilientClientLatencyToleranceSmall(nil),
 		t:      x.NewTemplate("opa"),
+		vm:     jsonnet.MakeVM(),
 	}
 }
 
@@ -82,6 +84,8 @@ func (a *AuthorizerOPA) Authorize(r *http.Request, session *authn.Authentication
 	if err != nil {
 		return err
 	}
+
+	templateID := c.PayloadTemplateID()
 
 	upstreamReq := map[string]interface{}{}
 	upstreamReq["method"] = r.Method
@@ -106,16 +110,24 @@ func (a *AuthorizerOPA) Authorize(r *http.Request, session *authn.Authentication
 		return errors.WithStack(err)
 	}
 
-	req, err := http.NewRequest("POST", c.Endpoint, bytes.NewReader(jsonInput))
+	jsonInputReader := bytes.NewReader(jsonInput)
+
+	if c.Payload != "" {
+		str, err := a.vm.EvaluateSnippet(templateID, c.Payload)
+
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		jsonInputReader = bytes.NewReader([]byte(str))
+	}
+
+	req, err := http.NewRequest("POST", c.Endpoint, jsonInputReader)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	for header, values := range c.Headers {
-		for i := range values {
-			req.Header.Add(header, values[i])
-		}
-	}
-	if len(req.Header.Values("Content-Type")) == 0 {
+
+	if req.Header.Get("Content-Type") == "" {
 		req.Header.Add("Content-Type", "application/json")
 	}
 
