@@ -185,9 +185,7 @@ func (a *AuthorizerOPA) Config(config json.RawMessage) (*AuthorizerOPAConfigurat
 }
 
 func getParsedBody(req *http.Request) (interface{}, bool, error) {
-	body := req.Body
-
-	if body == nil {
+	if req.Body == nil {
 		return nil, false, nil
 	}
 
@@ -195,15 +193,21 @@ func getParsedBody(req *http.Request) (interface{}, bool, error) {
 
 	if req.ContentLength >= 0 {
 		if strings.Contains(req.Header.Get("content-type"), "application/json") {
-			body, err := ioutil.ReadAll(body)
+			body, err := ioutil.ReadAll(req.Body)
+
+			err = json.Unmarshal(body, &data)
+
 			if err != nil {
 				return nil, false, err
 			}
 
-			err = json.Unmarshal(body, &data)
+			err = req.Body.Close()
+
 			if err != nil {
 				return nil, false, err
 			}
+
+			req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 		}
 	}
 
