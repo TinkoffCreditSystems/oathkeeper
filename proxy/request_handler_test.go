@@ -44,8 +44,8 @@ import (
 	"github.com/ory/oathkeeper/rule"
 )
 
-func newTestRequest(u string) *http.Request {
-	return &http.Request{URL: urlx.ParseOrPanic(u)}
+func newTestRequest(method, u string) *http.Request {
+	return &http.Request{Method: method, URL: urlx.ParseOrPanic(u)}
 }
 
 func TestHandleError(t *testing.T) {
@@ -283,7 +283,7 @@ func TestRequestHandler(t *testing.T) {
 		{
 			d:         "should fail because the rule is missing authn, authz, and mutator",
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{},
 				Authorizer:     rule.Handler{},
@@ -298,7 +298,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{},
 				Authorizer:     rule.Handler{},
@@ -313,7 +313,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: false,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "noop"}},
 				Authorizer:     rule.Handler{Handler: "allow"},
@@ -328,7 +328,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "anonymous"}},
 				Authorizer:     rule.Handler{},
@@ -343,7 +343,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "anonymous"}},
 				Authorizer:     rule.Handler{Handler: "allow"},
@@ -358,7 +358,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "anonymous"}},
 				Authorizer:     rule.Handler{Handler: "allow"},
@@ -373,7 +373,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "anonymous"}},
 				Authorizer:     rule.Handler{Handler: "allow"},
@@ -388,7 +388,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, false)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "anonymous"}},
 				Authorizer:     rule.Handler{Handler: "allow"},
@@ -403,7 +403,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "invalid-id"}},
 				Authorizer:     rule.Handler{Handler: "allow"},
@@ -418,7 +418,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "anonymous"}},
 				Authorizer:     rule.Handler{Handler: "invalid-id"},
@@ -433,7 +433,7 @@ func TestRequestHandler(t *testing.T) {
 				viper.Set(configuration.ViperKeyMutatorNoopIsEnabled, true)
 			},
 			expectErr: true,
-			r:         newTestRequest("http://localhost"),
+			r:         newTestRequest(http.MethodGet, "http://localhost"),
 			rule: rule.Rule{
 				Authenticators: []rule.Handler{{Handler: "anonymous"}},
 				Authorizer:     rule.Handler{Handler: "allow"},
@@ -470,60 +470,65 @@ func TestInitializeSession(t *testing.T) {
 	}{
 		{
 			d:                "Rule without capture",
-			r:                newTestRequest("http://localhost"),
+			r:                newTestRequest(http.MethodPost, "http://localhost"),
 			matchingStrategy: configuration.Regexp,
 			ruleMatch: rule.Match{
 				URL: "http://localhost",
 			},
 			expectContext: authn.MatchContext{
+				Method:              http.MethodPost,
 				RegexpCaptureGroups: []string{},
 				URL:                 urlx.ParseOrPanic("http://localhost"),
 			},
 		},
 		{
 			d:                "Rule with one capture",
-			r:                newTestRequest("http://localhost/user"),
+			r:                newTestRequest(http.MethodGet, "http://localhost/user"),
 			matchingStrategy: configuration.Regexp,
 			ruleMatch: rule.Match{
 				URL: "http://localhost/<.*>",
 			},
 			expectContext: authn.MatchContext{
+				Method:              http.MethodGet,
 				RegexpCaptureGroups: []string{"user"},
 				URL:                 urlx.ParseOrPanic("http://localhost/user"),
 			},
 		},
 		{
 			d:                "Request with query params",
-			r:                newTestRequest("http://localhost/user?param=test"),
+			r:                newTestRequest(http.MethodGet, "http://localhost/user?param=test"),
 			matchingStrategy: configuration.Regexp,
 			ruleMatch: rule.Match{
 				URL: "http://localhost/<.*>",
 			},
 			expectContext: authn.MatchContext{
+				Method:              http.MethodGet,
 				RegexpCaptureGroups: []string{"user"},
 				URL:                 urlx.ParseOrPanic("http://localhost/user?param=test"),
 			},
 		},
 		{
 			d:                "Rule with 2 captures",
-			r:                newTestRequest("http://localhost/user?param=test"),
+			r:                newTestRequest(http.MethodGet, "http://localhost/user?param=test"),
 			matchingStrategy: configuration.Regexp,
 			ruleMatch: rule.Match{
 				URL: "<http|https>://localhost/<.*>",
 			},
 			expectContext: authn.MatchContext{
+				Method:              http.MethodGet,
 				RegexpCaptureGroups: []string{"http", "user"},
 				URL:                 urlx.ParseOrPanic("http://localhost/user?param=test"),
 			},
 		},
 		{
 			d:                "Rule with Glob matching strategy",
-			r:                newTestRequest("http://localhost/user?param=test"),
+			r:                newTestRequest(http.MethodGet, "http://localhost/user?param=test"),
 			matchingStrategy: configuration.Glob,
 			ruleMatch: rule.Match{
 				URL: "<http|https>://localhost/<*>",
 			},
 			expectContext: authn.MatchContext{
+				Method:              http.MethodGet,
 				RegexpCaptureGroups: []string{},
 				URL:                 urlx.ParseOrPanic("http://localhost/user?param=test"),
 			},

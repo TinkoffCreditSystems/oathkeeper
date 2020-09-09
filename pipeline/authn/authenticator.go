@@ -2,10 +2,9 @@ package authn
 
 import (
 	"encoding/json"
+	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
-
-	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 
@@ -40,10 +39,11 @@ func NewErrAuthenticatorMisconfigured(a Authenticator, err error) *herodot.Defau
 }
 
 type AuthenticationSession struct {
-	Subject      string                 `json:"subject"`
-	Extra        map[string]interface{} `json:"extra"`
-	Header       http.Header            `json:"header"`
-	MatchContext MatchContext           `json:"match_context"`
+	Subject         string                 `json:"subject"`
+	Extra           map[string]interface{} `json:"extra"`
+	Header          http.Header            `json:"header"`
+	MatchContext    MatchContext           `json:"match_context"`
+	UpstreamRequest map[string]interface{} `json:"upstream_request"`
 }
 
 type MatchContext struct {

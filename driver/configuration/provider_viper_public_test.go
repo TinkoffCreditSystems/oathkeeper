@@ -3,6 +3,7 @@ package configuration_test
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"testing"
@@ -167,6 +168,10 @@ func BenchmarkPipelineEnabled(b *testing.B) {
 		p.MutatorIsEnabled("noop")
 	}
 }
+
+const opaExpectedPayload = `input:
+  subject: {{ .Subject }}
+`
 
 func TestViperProvider(t *testing.T) {
 	viper.Reset()
@@ -354,6 +359,19 @@ func TestViperProvider(t *testing.T) {
 
 			assert.EqualValues(t, "https://host/path", config.Remote)
 			assert.EqualValues(t, "{}", config.Payload)
+		})
+
+		t.Run("authorizer=opa", func(t *testing.T) {
+			a := authz.NewAuthorizerOPA(p)
+			assert.True(t, p.AuthorizerIsEnabled(a.GetID()))
+			require.NoError(t, a.Validate(nil))
+
+			config, err := a.Config(nil)
+			require.NoError(t, err)
+
+			assert.EqualValues(t, "https://opa-host/v1/data/pkg-name", config.Endpoint)
+			assert.EqualValues(t, http.Header{"foo": {"bar"}}, config.Headers)
+			assert.EqualValues(t, opaExpectedPayload, config.Payload)
 		})
 	})
 

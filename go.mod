@@ -23,6 +23,7 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
+	github.com/google/go-jsonnet v0.16.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.1 // indirect
 	github.com/gorilla/websocket v1.4.2
@@ -32,6 +33,7 @@ require (
 	github.com/lib/pq v1.3.0
 	github.com/mattn/goveralls v0.0.5
 	github.com/mitchellh/copystructure v1.0.0
+	github.com/open-policy-agent/opa v0.23.2 // indirect
 	github.com/ory/analytics-go/v4 v4.0.1
 	github.com/ory/cli v0.0.10
 	github.com/ory/fosite v0.29.2

@@ -859,6 +859,34 @@
       ],
       "additionalProperties": false
     },
+    "configAuthorizersOPA": {
+      "type": "object",
+      "title": "OPA Configuration",
+      "description": "This section is optional when the authorizer is disabled.",
+      "properties": {
+        "endpoint": {
+          "title": "OPA endpoint URL",
+          "type": "string",
+          "format": "uri",
+          "description": "The URL of OPA query API endpoint. The OPA is expected to return 200 OK with application/json body containing result.{allow,deny} fields.\n\n>If this authorizer is enabled, this value is required.",
+          "examples": [
+            "https://opa-host/v1/data/pkg-name"
+          ]
+        },
+        "payload": {
+          "title": "Jsonnet template",
+          "type": "string",
+          "description": "The Jsonnet template that will be used for the request body in OPA. If not specified, the request body will be sent unchanged.",
+          "examples": [
+            "local input = std.extVar('input');\n\n{\n  identity: {}\n  + (if input.extra != null then {\n       id: input.extra.identity.id,\n       name: input.extra.identity.name,\n       given_name: input.extra.identity.given_name,\n       family_name: input.extra.identity.family_name,\n       preferred_username: input.extra.identity.preferred_username\n    } else {}),\n  request: {\n    path: input.match_context.url.Path\n  }\n}"
+          ]
+        }
+      },
+      "required": [
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
     "configMutatorsCookie": {
       "type": "object",
       "title": "Cookie Mutator Configuration",
@@ -1558,6 +1586,38 @@
                 },
                 "config": {
                   "$ref": "#/definitions/configAuthorizersRemoteJSON"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            },
+            {
+              "properties": {
+                "enabled": {
+                  "const": false
+                }
+              }
+            }
+          ]
+        },
+        "opa": {
+          "title": "OPA",
+          "description": "The [`opa` authorizer](https://www.ory.sh/oathkeeper/docs/pipeline/authz#opa).",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "$ref": "#/definitions/handlerSwitch"
+            }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "enabled": {
+                  "const": true
+                },
+                "config": {
+                  "$ref": "#/definitions/configAuthorizersOPA"
                 }
               },
               "required": [

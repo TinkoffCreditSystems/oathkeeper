@@ -271,6 +271,14 @@ authorizers:
       remote: https://host/path
       payload: "{}"
 
+  # Configures the opa authorizer
+  opa:
+    # Set enabled to true if the authorizer should be enabled and false to disable the authorizer. Defaults to false.
+    enabled: true
+
+    config:
+      endpoint: https://opa-host/v1/data/pkg-name
+
 # All mutators can be configured under this configuration key
 mutators:
   header:
