@@ -2,14 +2,17 @@ package authn
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/dgraph-io/ristretto"
+	"github.com/google/go-jsonnet"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2/clientcredentials"
@@ -31,8 +34,18 @@ type AuthenticatorOAuth2IntrospectionConfiguration struct {
 	IntrospectionURL            string                                                `json:"introspection_url"`
 	BearerTokenLocation         *helper.BearerTokenLocation                           `json:"token_from"`
 	IntrospectionRequestHeaders map[string]string                                     `json:"introspection_request_headers"`
+	UserInfoURL                 string                                                `json:"userinfo_url"`
+	MappingExtra                string                                                `json:"mapping_extra"`
 	Retry                       *AuthenticatorOAuth2IntrospectionRetryConfiguration   `json:"retry"`
 	Cache                       cacheConfig                                           `json:"cache"`
+}
+
+func (c *AuthenticatorOAuth2IntrospectionConfiguration) MappingTemplateID() string {
+	if c.MappingExtra == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(c.MappingExtra)))
 }
 
 type AuthenticatorOAuth2IntrospectionPreAuthConfiguration struct {
@@ -57,6 +70,7 @@ type AuthenticatorOAuth2Introspection struct {
 	c configuration.Provider
 
 	client *http.Client
+	mapper *jsonnet.VM
 
 	tokenCache *ristretto.Cache
 	cacheTTL   *time.Duration
@@ -72,7 +86,7 @@ func NewAuthenticatorOAuth2Introspection(c configuration.Provider) *Authenticato
 		// This is a best-practice value.
 		BufferItems: 64,
 	})
-	return &AuthenticatorOAuth2Introspection{c: c, client: httpx.NewResilientClientLatencyToleranceSmall(rt), tokenCache: cache}
+	return &AuthenticatorOAuth2Introspection{c: c, client: httpx.NewResilientClientLatencyToleranceSmall(rt), mapper: jsonnet.MakeVM(), tokenCache: cache}
 }
 
 func (a *AuthenticatorOAuth2Introspection) GetID() string {
@@ -137,7 +151,8 @@ func (a *AuthenticatorOAuth2Introspection) Authenticate(r *http.Request, session
 
 	ss := a.c.ToScopeStrategy(cf.ScopeStrategy, "authenticators.oauth2_introspection.scope_strategy")
 
-	i, ok := a.tokenFromCache(cf, token)
+	key := token + cf.MappingTemplateID()
+	i, ok := a.tokenFromCache(cf, key)
 	if !ok {
 		body := url.Values{"token": {token}}
 
@@ -164,7 +179,12 @@ func (a *AuthenticatorOAuth2Introspection) Authenticate(r *http.Request, session
 			return errors.Errorf("Introspection returned status code %d but expected %d", resp.StatusCode, http.StatusOK)
 		}
 
-		if err := json.NewDecoder(resp.Body).Decode(&i); err != nil {
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := json.Unmarshal(data, &i); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -204,13 +224,59 @@ func (a *AuthenticatorOAuth2Introspection) Authenticate(r *http.Request, session
 		i.Extra["client_id"] = i.ClientID
 		i.Extra["scope"] = i.Scope
 
-		a.tokenToCache(cf, i, token)
+		var claims []byte
+		if cf.UserInfoURL != "" {
+			claims, err = a.extraUserInfo(cf.UserInfoURL, token)
+			if err != nil {
+				return err
+			}
+		}
+
+		if cf.MappingExtra != "" {
+			a.mapper.ExtCode("claims", string(claims))
+			a.mapper.ExtCode("client", string(data))
+			str, err := a.mapper.EvaluateSnippet(cf.MappingTemplateID(), cf.MappingExtra)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			if err := json.Unmarshal([]byte(str), &i.Extra); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+		a.tokenToCache(cf, i, key)
 	}
 
 	session.Subject = i.Subject
 	session.Extra = i.Extra
 
 	return nil
+}
+
+func (a *AuthenticatorOAuth2Introspection) extraUserInfo(uri, token string) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	req.Header.Set("Authorization", "bearer "+token)
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("Userinfo returned status code %d but expected %d", resp.StatusCode, http.StatusOK)
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return data, nil
 }
 
 func (a *AuthenticatorOAuth2Introspection) Validate(config json.RawMessage) error {
