@@ -743,6 +743,22 @@
             }
           ]
         },
+        "userinfo_url": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://oauth2-provider/userinfo"
+          ],
+          "title": "OAuth 2.0 Userinfo URL"
+        },
+        "mapping_extra": {
+          "title": "Jsonnet template",
+          "type": "string",
+          "description": "The Jsonnet template that will be used for mapping introspection extra fields.",
+          "examples": [
+            "local claims = std.extVar('claims');\nlocal client = std.extVar('client');\n\n{\n  sub: claims.sub,\n  name: claims.name,\n  email: claims.email,\n  scope: client.scope,\n  client_id: client.client_id\n}"
+          ]
+        },
         "retry": {
           "$ref": "#/definitions/retry"
         },
