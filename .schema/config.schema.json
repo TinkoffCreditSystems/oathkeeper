@@ -1826,6 +1826,16 @@
           ],
           "title": "Format",
           "description": "The log format can either be text or JSON."
+        },
+        "formatter": {
+          "type": "string",
+          "default": "text",
+          "enum": [
+            "text",
+            "json"
+          ],
+          "title": "Format",
+          "description": "The log format can either be text or JSON."
         }
       },
       "additionalProperties": false
