@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/ory/oathkeeper/proxy"
-	"github.com/ory/oathkeeper/pipeline/authn"
 )
 
 // NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
@@ -37,13 +36,7 @@ func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
 
 // logEvent build event and logs it if needed.
 func (d *ProxyAuditLogDecorator) logEvent(req *http.Request, resp *http.Response, roundTripError error) {
-	var subj *string
-
-	if sess, ok := req.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
-		subj = &sess.Subject
-	}
-
-	if event, err := d.b.Build(subj, req, resp, roundTripError); err == nil {
+	if event, err := d.b.Build(req, resp, roundTripError); err == nil {
 		d.s.Send(*event)
 	}
 }

@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/oathkeeper/proxy"
+	"github.com/ory/oathkeeper/pipeline/authn"
 )
 
 // Event is a type for the auditlog event intermediate representation.
@@ -40,7 +43,7 @@ type Event struct {
 type EventBuilder struct{}
 
 // Build method performs filtering of data using rules from config.
-func (f *EventBuilder) Build(subj *string, req *http.Request, resp *http.Response, err error) (*Event, error) {
+func (f *EventBuilder) Build(req *http.Request, resp *http.Response, err error) (*Event, error) {
 	var e Event
 
 	if req != nil {
@@ -52,7 +55,9 @@ func (f *EventBuilder) Build(subj *string, req *http.Request, resp *http.Respons
 		// TODO: filter request header & body
 	}
 
-	e.UserID = subj
+	if sess, ok := req.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
+		e.UserID = &sess.Subject
+	}
 
 	if err != nil {
 		e.OathkeeperError = err
