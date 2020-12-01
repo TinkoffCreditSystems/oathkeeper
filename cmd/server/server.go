@@ -30,16 +30,17 @@ import (
 	"github.com/ory/oathkeeper/driver"
 	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/metrics"
+	"github.com/ory/oathkeeper/auditlog"
 	"github.com/ory/oathkeeper/x"
 )
 
 func runProxy(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom *metrics.PrometheusRepository) func() {
 	return func() {
-		proxy := d.Registry().Proxy()
+		proxyAuditLogDecorator := auditlog.NewProxyAuditLogDecorator(*d.Registry().Proxy())
 
 		handler := &httputil.ReverseProxy{
-			Director:  proxy.Director,
-			Transport: proxy,
+			Director:  proxyAuditLogDecorator.Director,
+			Transport: proxyAuditLogDecorator,
 		}
 
 		promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()
