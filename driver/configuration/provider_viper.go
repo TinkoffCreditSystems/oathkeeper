@@ -118,6 +118,11 @@ const (
 	ViperKeyErrorsWWWAuthenticateIsEnabled = ViperKeyErrors + ".www_authenticate.enabled"
 )
 
+// AuditLog
+const (
+	AuditLogEnabled = "auditlog.enabled"
+)
+
 type ViperProvider struct {
 	l *logrusx.Logger
 
@@ -435,4 +440,8 @@ func (v *ViperProvider) TracingJaegerConfig() *tracing.JaegerConfig {
 			viperx.GetString(v.l, "tracing.providers.jaeger.propagation", "", "TRACING_PROVIDER_JAEGER_PROPAGATION"),
 		),
 	}
+}
+
+func (v *ViperProvider) AuditLogEnabled() bool {
+	return viperx.GetBool(v.l, AuditLogEnabled, false)
 }

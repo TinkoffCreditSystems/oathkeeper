@@ -63,6 +63,9 @@ type Provider interface {
 	TracingServiceName() string
 	TracingProvider() string
 	TracingJaegerConfig() *tracing.JaegerConfig
+
+	// Audit Log
+	AuditLogEnabled() bool
 }
 
 type ProviderErrorHandlers interface {
