@@ -9,9 +9,6 @@ type Sender interface {
 	Send(e Event)
 }
 
-// FilebeatSender is used when need to send events to filebeat.
-type FilebeatSender struct{}
-
 // StdoutSender is used when need to write event to standart out.
 type StdoutSender struct{}
 

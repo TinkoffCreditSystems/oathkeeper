@@ -1,22 +1,11 @@
 package auditlog
 
 import (
-	"github.com/ory/x/logrusx"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/ory/gojsonschema"
-	log "github.com/sirupsen/logrus"
+	"github.com/ory/x/logrusx"
 )
-
-type EventGeneratorConfigs []EventGeneratorConfig
-
-type EventGeneratorConfig struct {
-	Pattern string `json:"pattern"`
-	Method  string `json:"method"`
-}
-
-func (c *EventGeneratorConfig) UnmarshalJSON(raw []byte) error {
-	return nil
-}
 
 func ValidateSchema(path string, logger *logrusx.Logger) {
 	schemaLoader := gojsonschema.NewReferenceLoader("file:///auditlog.schema.json")
