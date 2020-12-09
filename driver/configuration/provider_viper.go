@@ -120,7 +120,7 @@ const (
 
 // AuditLog
 const (
-	AuditLogEnabled = "auditlog.enabled"
+	ViperAuditLogConfigPath = "auditlog.config"
 )
 
 type ViperProvider struct {
@@ -443,5 +443,12 @@ func (v *ViperProvider) TracingJaegerConfig() *tracing.JaegerConfig {
 }
 
 func (v *ViperProvider) AuditLogEnabled() bool {
-	return viperx.GetBool(v.l, AuditLogEnabled, false)
+	if v.AuditLogConfigPath() == "" {
+		return false
+	}
+	return true
+}
+
+func (v *ViperProvider) AuditLogConfigPath() string {
+	return viperx.GetString(v.l, ViperAuditLogConfigPath, "")
 }

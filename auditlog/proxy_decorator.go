@@ -1,25 +1,35 @@
 package auditlog
 
 import (
+	"github.com/ory/x/logrusx"
 	"net/http"
 
 	"github.com/ory/oathkeeper/proxy"
 )
 
+type RoundTripper interface {
+	RoundTrip(r *http.Request) (*http.Response, error)
+	Director(r *http.Request)
+}
+
 // NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
-func NewProxyAuditLogDecorator(p proxy.Proxy) *ProxyAuditLogDecorator {
+func NewProxyAuditLogDecorator(proxy proxy.Proxy, configPath string, logger *logrusx.Logger) *ProxyAuditLogDecorator {
+	ValidateSchema(configPath, logger)
+
 	return &ProxyAuditLogDecorator{
-		p: p,
+		p: proxy,
 		b: EventBuilder{},
 		s: &StdoutSender{},
+		l: logger,
 	}
 }
 
-// ProxyAuditLogDecorator is a wrapper for Proxy sctruct with audit logging abilities.
+// ProxyAuditLogDecorator is a wrapper for Proxy struct with audit logging abilities.
 type ProxyAuditLogDecorator struct {
 	p proxy.Proxy
 	b EventBuilder
 	s Sender
+	l *logrusx.Logger
 }
 
 // RoundTrip performs wrapped structure's RoundTrip and logs this event.
@@ -29,7 +39,7 @@ func (d *ProxyAuditLogDecorator) RoundTrip(r *http.Request) (*http.Response, err
 	return resp, err
 }
 
-// Director performs wrapped structure's Ditector.
+// Director performs wrapped structure's Director.
 func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
 	d.p.Director(r)
 }

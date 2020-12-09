@@ -66,6 +66,7 @@ type Provider interface {
 
 	// Audit Log
 	AuditLogEnabled() bool
+	AuditLogConfigPath() string
 }
 
 type ProviderErrorHandlers interface {

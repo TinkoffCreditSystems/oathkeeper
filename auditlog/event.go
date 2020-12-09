@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/oathkeeper/proxy"
 	"github.com/ory/oathkeeper/pipeline/authn"
+	"github.com/ory/oathkeeper/proxy"
 )
 
 // Event is a type for the auditlog event intermediate representation.
@@ -52,11 +52,11 @@ func (f *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 		e.UserAddr = req.RemoteAddr
 		e.Timestamp = time.Now()
 
-		// TODO: filter request header & body
-	}
+		if sess, ok := req.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
+			e.UserID = &sess.Subject
+		}
 
-	if sess, ok := req.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
-		e.UserID = &sess.Subject
+		// TODO: filter request header & body
 	}
 
 	if err != nil {

@@ -27,20 +27,27 @@ import (
 	"github.com/ory/x/tlsx"
 
 	"github.com/ory/oathkeeper/api"
+	"github.com/ory/oathkeeper/auditlog"
 	"github.com/ory/oathkeeper/driver"
 	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/metrics"
-	"github.com/ory/oathkeeper/auditlog"
 	"github.com/ory/oathkeeper/x"
 )
 
 func runProxy(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom *metrics.PrometheusRepository) func() {
 	return func() {
-		proxyAuditLogDecorator := auditlog.NewProxyAuditLogDecorator(*d.Registry().Proxy())
+		var rt auditlog.RoundTripper
+
+		if d.Configuration().AuditLogEnabled() {
+			rt = auditlog.NewProxyAuditLogDecorator(*d.Registry().Proxy(),
+				d.Configuration().AuditLogConfigPath(), d.Registry().Logger())
+		} else {
+			rt = d.Registry().Proxy()
+		}
 
 		handler := &httputil.ReverseProxy{
-			Director:  proxyAuditLogDecorator.Director,
-			Transport: proxyAuditLogDecorator,
+			Director:  rt.Director,
+			Transport: rt,
 		}
 
 		promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()

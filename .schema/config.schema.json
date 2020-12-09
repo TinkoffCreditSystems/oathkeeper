@@ -1861,11 +1861,11 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": "false",
+        "config": {
+          "type": "string",
+          "default": "",
           "examples": [
-          "yes"
+            "/path/to/conf/auditlog.json"
           ]
         }
       }
