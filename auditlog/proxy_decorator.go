@@ -17,13 +17,9 @@ type RoundTripper interface {
 
 // NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
 func NewProxyAuditLogDecorator(proxy proxy.Proxy, configPath string, logger *logrusx.Logger) *ProxyAuditLogDecorator {
-	ValidateSchema(configPath, logger)
-
-	// TODO parse events
-
 	return &ProxyAuditLogDecorator{
 		p: proxy,
-		b: []EventBuilder{},
+		b: DeserializeEventBuilders(configPath, logger),
 		s: &StdoutSender{},
 		l: logger,
 	}
