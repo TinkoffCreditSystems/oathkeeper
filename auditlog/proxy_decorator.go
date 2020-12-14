@@ -55,7 +55,7 @@ func (d *ProxyAuditLogDecorator) saveEvent(req *http.Request, resp *http.Respons
 	for _, b := range d.b {
 		if b.Match(req.URL.String(), req.Method) {
 			if event, err := b.Build(req, resp, roundTripError); err == nil {
-				d.s.Send(*event)
+				d.s.Send(*event, d.l)
 			} else {
 				d.l.WithFields(log.Fields{"error": err}).Error("Error while reading Audit Log configuration")
 			}
