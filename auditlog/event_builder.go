@@ -38,6 +38,8 @@ type EventBuilder struct {
 // UnmarshalJSON implements the Unmarshaler interface for the EventBuilder struct.
 func (b *EventBuilder) UnmarshalJSON(raw []byte) error {
 	var err error
+
+	// An additional struct like in rule.go.
 	var bb struct {
 		URLPattern              string   `json:"url_pattern"`
 		Method                  string   `json:"http_method"`
@@ -138,7 +140,7 @@ func validateJSONConfigSchema(path string, logger *logrusx.Logger) {
 // deserializeJSONConfig takes the path of file which was checked to fit JSON schema
 // and deserializes it to the array of EventBuilder
 func deserializeJSONConfig(path string, logger *logrusx.Logger) []EventBuilder {
-	// An alternative way to write deserialization is to use documentLoader.LoadJSON.
+	// An alternative way to deserialize data is to use documentLoader.LoadJSON.
 	// That way is more secure because of deserializing assuredly the same data which
 	// was validated through schema and be no afraid if file was changed.
 	// But that way requires a lot of manual work with JSON unmarshalling using interface{}.
