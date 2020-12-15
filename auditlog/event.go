@@ -13,9 +13,9 @@ type Event struct {
 
 	// Request context parameters.
 	RequestHeader  map[string]string
-	RequestBody    map[string]string
+	RequestBody    map[string]interface{}
 	ResponseHeader map[string]string
-	ResponseBody   map[string]string
+	ResponseBody   map[string]interface{}
 	Meta           map[string]string
 
 	OathkeeperError error
@@ -24,9 +24,9 @@ type Event struct {
 func NewEvent() Event {
 	return Event{
 		RequestHeader:  make(map[string]string),
-		RequestBody:    make(map[string]string),
+		RequestBody:    make(map[string]interface{}),
 		ResponseHeader: make(map[string]string),
-		ResponseBody:   make(map[string]string),
+		ResponseBody:   make(map[string]interface{}),
 		Meta:           make(map[string]string),
 	}
 }

@@ -20,19 +20,19 @@ import (
 // EventBuilder is a type to build the Event structure.
 type EventBuilder struct {
 	URLPattern string `json:"url_pattern"`
-
-	Method string `json:"http_method"`
-
-	RequestHeaderWhiteList  []string `json:"filter.request_header"`
-	RequestBodyWhiteList    []string `json:"filter.request_body"`
-	ResponseHeaderWhiteList []string `json:"filter.response_header"`
-	ResponseBodyWhiteList   []string `json:"filter.response_body"`
-
+	Method     string `json:"http_method"`
+	Filter     Filter `json:"filter"`
 	// Logger string `json:"logger"`
-
 	DescriptionTemplate string `json:"description_template"`
 
 	r *regexp.Regexp
+}
+
+type Filter struct {
+	RequestHeaderWhiteList  []string `json:"request_header"`
+	RequestBodyWhiteList    []string `json:"request_body"`
+	ResponseHeaderWhiteList []string `json:"response_header"`
+	ResponseBodyWhiteList   []string `json:"response_body"`
 }
 
 // UnmarshalJSON implements the Unmarshaler interface for the EventBuilder struct.
@@ -41,14 +41,11 @@ func (b *EventBuilder) UnmarshalJSON(raw []byte) error {
 
 	// An additional struct like in rule.go.
 	var bb struct {
-		URLPattern              string   `json:"url_pattern"`
-		Method                  string   `json:"http_method"`
-		RequestHeaderWhiteList  []string `json:"filter.request_header"`
-		RequestBodyWhiteList    []string `json:"filter.request_body"`
-		ResponseHeaderWhiteList []string `json:"filter.response_header"`
-		ResponseBodyWhiteList   []string `json:"filter.response_body"`
-		DescriptionTemplate     string   `json:"description_template"`
-		r                       *regexp.Regexp
+		URLPattern          string `json:"url_pattern"`
+		Method              string `json:"http_method"`
+		Filter              Filter `json:"filter"`
+		DescriptionTemplate string `json:"description_template"`
+		r                   *regexp.Regexp
 	}
 
 	if err = json.Unmarshal(raw, &bb); err != nil {
@@ -88,7 +85,8 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 			e.Meta["user_id"] = sess.Subject
 		}
 
-		// TODO: filter request header & body.
+		e.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
+		// TODO: filter request body.
 	}
 
 	if err != nil {
@@ -98,12 +96,22 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 	if resp != nil {
 		e.Meta["status_code"] = strconv.Itoa(resp.StatusCode)
 
-		// TODO: filter response header & body.
+		e.ResponseHeader = filterHeader(resp.Header, b.Filter.RequestHeaderWhiteList)
+		// TODO: filter response body.
 	}
 
 	// TODO generate Description.
 
 	return &e, nil
+}
+
+// filterHeader filters HTTP header according to the white list.
+func filterHeader(h http.Header, wl []string) map[string]string {
+	result := make(map[string]string)
+	for _, key := range wl {
+		result[key] = h.Get(key)
+	}
+	return result
 }
 
 // DeserializeEventBuilders validates and deserializes an array of event builders using file with path "path".
