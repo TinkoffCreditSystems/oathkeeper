@@ -2,6 +2,7 @@ package auditlog
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -86,6 +87,7 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 		}
 
 		e.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
+		filterBody(&req.Body, b.Filter.RequestBodyWhiteList)
 		// TODO: filter request body.
 	}
 
@@ -97,12 +99,19 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 		e.Meta["status_code"] = strconv.Itoa(resp.StatusCode)
 
 		e.ResponseHeader = filterHeader(resp.Header, b.Filter.RequestHeaderWhiteList)
+		filterBody(&resp.Body, b.Filter.RequestBodyWhiteList)
 		// TODO: filter response body.
 	}
 
 	// TODO generate Description.
 
 	return &e, nil
+}
+
+func filterBody(b *io.ReadCloser, wl []string) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	return result
 }
 
 // filterHeader filters HTTP header according to the white list.

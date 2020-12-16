@@ -17,7 +17,7 @@ type StdoutSender struct{}
 // Send sends event info to stdout.
 func (s *StdoutSender) Send(e Event, l *logrusx.Logger) {
 	l.WithFields(log.Fields{
-		"service_name": "kek",
+		"service_name": "Audit Log",
 		"event":        e,
 	}).Info("AuditLog Message")
 }
