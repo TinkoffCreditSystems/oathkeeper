@@ -120,7 +120,12 @@ const (
 
 // AuditLog
 const (
+	ViperAuditLogEnabled = "auditlog.enabled"
 	ViperAuditLogConfigPath = "auditlog.config"
+	ViperAuditLogSchemaPath = "auditlog.schema"
+	ViperAuditLogKafkaEnabled   = "auditlog.kafka.enabled"
+	ViperAuditLogKafkaURL   = "auditlog.kafka.url"
+	ViperAuditLogKafkaTopic = "auditlog.kafka.topic"
 )
 
 type ViperProvider struct {
@@ -443,12 +448,25 @@ func (v *ViperProvider) TracingJaegerConfig() *tracing.JaegerConfig {
 }
 
 func (v *ViperProvider) AuditLogEnabled() bool {
-	if v.AuditLogConfigPath() == "" {
-		return false
-	}
-	return true
+	return viperx.GetBool(v.l, ViperAuditLogEnabled, false)
 }
 
 func (v *ViperProvider) AuditLogConfigPath() string {
 	return viperx.GetString(v.l, ViperAuditLogConfigPath, "")
+}
+
+func (v *ViperProvider) AuditLogSchemaPath() string {
+	return viperx.GetString(v.l, ViperAuditLogSchemaPath, "")
+}
+
+func (v *ViperProvider) AuditLogKafkaEnabled() bool {
+	return viperx.GetBool(v.l, ViperAuditLogKafkaEnabled, false)
+}
+
+func (v *ViperProvider) AuditLogKafkaURL() string {
+	return viperx.GetString(v.l, ViperAuditLogKafkaURL, "")
+}
+
+func (v *ViperProvider) AuditLogKafkaTopic() string {
+	return viperx.GetString(v.l, ViperAuditLogKafkaTopic, "")
 }

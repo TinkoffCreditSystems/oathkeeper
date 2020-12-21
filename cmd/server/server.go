@@ -39,10 +39,11 @@ func runProxy(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom 
 		var rt auditlog.RoundTripper
 
 		if d.Configuration().AuditLogEnabled() {
-			rt = auditlog.NewProxyAuditLogDecorator(*d.Registry().Proxy(),
-				d.Configuration().AuditLogConfigPath(), d.Registry().Logger())
+			rt = auditlog.NewProxyAuditLogDecorator(*d.Registry().Proxy(), d.Configuration(), d.Registry().Logger())
+			logger.Info("Audit Log Enabled")
 		} else {
 			rt = d.Registry().Proxy()
+			logger.Info("Audit Log Disabled")
 		}
 
 		handler := &httputil.ReverseProxy{

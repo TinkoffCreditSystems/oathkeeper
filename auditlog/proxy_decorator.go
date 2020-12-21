@@ -8,6 +8,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/proxy"
 	"github.com/ory/x/logrusx"
 )
@@ -27,16 +28,18 @@ type ProxyAuditLogDecorator struct {
 }
 
 // NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
-func NewProxyAuditLogDecorator(proxy proxy.Proxy, configPath string, logger *logrusx.Logger) *ProxyAuditLogDecorator {
+func NewProxyAuditLogDecorator(proxy proxy.Proxy, config configuration.Provider, logger *logrusx.Logger) *ProxyAuditLogDecorator {
 	d := &ProxyAuditLogDecorator{
 		p: proxy,
-		b: DeserializeEventBuilders(configPath, logger),
+		b: DeserializeEventBuilders(config.AuditLogConfigPath(), config.AuditLogSchemaPath(), logger),
 		s: make([]Sender, 0),
 		l: logger,
 	}
 
 	d.s = append(d.s, &StdoutSender{l: logger})
-	d.s = append(d.s, &KafkaSender{})
+	if config.AuditLogKafkaEnabled() {
+		d.s = append(d.s, &KafkaSender{})
+	}
 
 	return d
 }

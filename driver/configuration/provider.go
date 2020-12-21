@@ -64,9 +64,12 @@ type Provider interface {
 	TracingProvider() string
 	TracingJaegerConfig() *tracing.JaegerConfig
 
-	// Audit Log
 	AuditLogEnabled() bool
 	AuditLogConfigPath() string
+	AuditLogSchemaPath() string
+	AuditLogKafkaEnabled() bool
+	AuditLogKafkaURL() string
+	AuditLogKafkaTopic() string
 }
 
 type ProviderErrorHandlers interface {

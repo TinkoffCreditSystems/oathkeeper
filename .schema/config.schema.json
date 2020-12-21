@@ -1861,12 +1861,46 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "examples": [
+            true
+          ]
+        },
         "config": {
           "type": "string",
           "default": "",
           "examples": [
             "/path/to/conf/auditlog.json"
           ]
+        },
+        "schema": {
+          "type": "string",
+          "default": "",
+          "examples": [
+            "/path/to/schema/auditlog.json"
+          ]
+        },
+        "kafka": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "examples": [
+                true
+              ]
+            },
+            "url": {
+              "type": "string",
+              "default": ""
+            },
+            "topic": {
+              "type": "string",
+              "default": ""
+            }
+          }
         }
       }
     }

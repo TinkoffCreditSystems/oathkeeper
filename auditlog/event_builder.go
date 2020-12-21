@@ -155,15 +155,15 @@ func filterHeader(h http.Header, wl []string) map[string]string {
 }
 
 // DeserializeEventBuilders validates and deserializes an array of event builders using file with path "path".
-func DeserializeEventBuilders(path string, logger *logrusx.Logger) []EventBuilder {
-	validateJSONConfigSchema(path, logger)
-	return deserializeJSONConfig(path, logger)
+func DeserializeEventBuilders(configPath, schemaPath string, logger *logrusx.Logger) []EventBuilder {
+	validateJSONConfigSchema(configPath, schemaPath, logger)
+	return deserializeJSONConfig(configPath, logger)
 }
 
 // validateJSONConfigSchema checks if config file fits JSON schema.
-func validateJSONConfigSchema(path string, logger *logrusx.Logger) {
-	schemaLoader := gojsonschema.NewReferenceLoader("file:///auditlog.schema.json")
-	documentLoader := gojsonschema.NewReferenceLoader(path)
+func validateJSONConfigSchema(configPath, schemaPath string, logger *logrusx.Logger) {
+	documentLoader := gojsonschema.NewReferenceLoader(configPath)
+	schemaLoader := gojsonschema.NewReferenceLoader(schemaPath)
 
 	if result, err := gojsonschema.Validate(schemaLoader, documentLoader); err != nil {
 		logger.WithFields(log.Fields{
