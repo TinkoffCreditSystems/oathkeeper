@@ -103,7 +103,6 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 	return &e, nil
 }
 
-// filterBody filters HTTP request body according to the white list.
 func filterBody(b io.ReadCloser, wl []string) map[string]interface{} {
 	result := make(map[string]interface{})
 
@@ -143,7 +142,6 @@ NextWhitelistItem:
 	return result
 }
 
-// filterHeader filters HTTP header according to the white list.
 func filterHeader(h http.Header, wl []string) map[string]string {
 	result := make(map[string]string)
 	for _, key := range wl {
@@ -175,7 +173,6 @@ func DeserializeEventBuildersFromBytes(config, schema []byte) ([]EventBuilder, e
 	return deserializeJSONConfig(config)
 }
 
-// validateJSONConfigSchema checks if config file fits JSON schema.
 func validateJSONConfigSchema(config, schema string) error {
 	configLoader := gojsonschema.NewStringLoader(config)
 	schemaLoader := gojsonschema.NewStringLoader(schema)
@@ -194,8 +191,6 @@ func validateJSONConfigSchema(config, schema string) error {
 	return nil
 }
 
-// deserializeJSONConfig takes the path of file which was checked to fit JSON schema
-// and deserializes it to the array of EventBuilder
 func deserializeJSONConfig(config []byte) ([]EventBuilder, error) {
 	var builders []EventBuilder
 

@@ -372,7 +372,7 @@ func TestDeserializeEventBuildersFromBytes(t *testing.T) {
 						}
 					}
 				}
-            }`),
+			}`),
 			bs: []EventBuilder{
 				{
 					URLPattern: "http://(localhost|127.0.0.1):8080/return200",
@@ -426,7 +426,7 @@ func TestDeserializeEventBuildersFromBytes(t *testing.T) {
 						}
 					}
 				}
-            }`),
+			}`),
 			bs:     nil,
 			hasErr: true,
 		},
