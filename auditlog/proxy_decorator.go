@@ -18,22 +18,27 @@ type RoundTripper interface {
 	Director(r *http.Request)
 }
 
-// NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
-func NewProxyAuditLogDecorator(proxy proxy.Proxy, configPath string, logger *logrusx.Logger) *ProxyAuditLogDecorator {
-	return &ProxyAuditLogDecorator{
-		p: proxy,
-		b: DeserializeEventBuilders(configPath, logger),
-		s: &StdoutSender{},
-		l: logger,
-	}
-}
-
 // ProxyAuditLogDecorator is a wrapper for Proxy struct with audit logging abilities.
 type ProxyAuditLogDecorator struct {
 	p proxy.Proxy
 	b []EventBuilder
-	s Sender
+	s []Sender
 	l *logrusx.Logger
+}
+
+// NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
+func NewProxyAuditLogDecorator(proxy proxy.Proxy, configPath string, logger *logrusx.Logger) *ProxyAuditLogDecorator {
+	d := &ProxyAuditLogDecorator{
+		p: proxy,
+		b: DeserializeEventBuilders(configPath, logger),
+		s: make([]Sender, 0),
+		l: logger,
+	}
+
+	d.s = append(d.s, &StdoutSender{l: logger})
+	d.s = append(d.s, &KafkaSender{})
+
+	return d
 }
 
 // RoundTrip performs wrapped structure's RoundTrip and logs request's event.
@@ -95,7 +100,9 @@ func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmut
 	for _, b := range d.b {
 		if b.Match(req.URL.String(), req.Method) {
 			if event, err := b.Build(req, resp, roundTripError); err == nil {
-				d.s.Send(*event, d.l)
+				for _, s := range d.s {
+					s.Send(*event)
+				}
 			} else {
 				d.l.WithFields(log.Fields{"error": err}).Error("Error while building event for audit log")
 			}
