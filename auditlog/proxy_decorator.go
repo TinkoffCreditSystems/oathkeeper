@@ -40,13 +40,8 @@ type ProxyAuditLogDecorator struct {
 func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, error) {
 	// Copy request body.
 	var reqBodyCopy io.ReadCloser = nil
-	if req != nil && req.Body != nil {
-		body, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			d.l.Error("Error reading request body in RoundTrip")
-		}
-		req.Body = ioutil.NopCloser(bytes.NewReader(body))
-		reqBodyCopy = ioutil.NopCloser(bytes.NewReader(body))
+	if req != nil {
+		req.Body, reqBodyCopy = copyBody(req.Body, d.l)
 	}
 
 	// Send request.
@@ -54,18 +49,25 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 
 	// Copy response body.
 	var respBodyCopy io.ReadCloser = nil
-	if resp != nil && resp.Body != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			d.l.Error("Error reading response body in RoundTrip")
-		}
-		resp.Body = ioutil.NopCloser(bytes.NewReader(body))
-		respBodyCopy = ioutil.NopCloser(bytes.NewReader(body))
+	if resp != nil {
+		resp.Body, respBodyCopy = copyBody(resp.Body, d.l)
 	}
 
 	// Log event.
 	go d.saveEvent(req, resp, reqBodyCopy, respBodyCopy, err)
 	return resp, err
+}
+
+func copyBody(rc io.ReadCloser, logger *logrusx.Logger) (a, b io.ReadCloser) {
+	if rc != nil {
+		body, err := ioutil.ReadAll(rc)
+		if err != nil {
+			logger.Error("Error reading request body in RoundTrip")
+		}
+		a = ioutil.NopCloser(bytes.NewReader(body))
+		b = ioutil.NopCloser(bytes.NewReader(body))
+	}
+	return a, b
 }
 
 // Director performs wrapped structure's Director.

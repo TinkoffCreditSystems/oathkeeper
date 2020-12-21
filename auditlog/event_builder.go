@@ -87,8 +87,7 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 		}
 
 		e.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
-		filterBody(&req.Body, b.Filter.RequestBodyWhiteList)
-		// TODO: filter request body.
+		e.RequestBody = filterBody(req.Body, b.Filter.RequestBodyWhiteList)
 	}
 
 	if err != nil {
@@ -98,9 +97,8 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 	if resp != nil {
 		e.Meta["status_code"] = strconv.Itoa(resp.StatusCode)
 
-		e.ResponseHeader = filterHeader(resp.Header, b.Filter.RequestHeaderWhiteList)
-		filterBody(&resp.Body, b.Filter.RequestBodyWhiteList)
-		// TODO: filter response body.
+		e.ResponseHeader = filterHeader(resp.Header, b.Filter.ResponseHeaderWhiteList)
+		e.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)
 	}
 
 	// TODO generate Description.
@@ -108,8 +106,36 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 	return &e, nil
 }
 
-func filterBody(b *io.ReadCloser, wl []string) map[string]interface{} {
+// filterBody filters HTTP request body according to the white list.
+func filterBody(b io.ReadCloser, wl []string) map[string]interface{} {
 	result := make(map[string]interface{})
+
+	if b == nil {
+		return result
+	}
+
+	bb, err := ioutil.ReadAll(b)
+	if err != nil {
+		return result
+	}
+
+	var body map[string]interface{}
+	if err = json.Unmarshal(bb, &body); err != nil {
+		return result
+	}
+
+	NextWhitelistItem:
+	for _, key := range wl {
+		var value interface{} = body
+		for _, k := range strings.Split(key, ".") {
+			var ok bool
+			value, ok = value.(map[string]interface{})[k]
+			if !ok {
+				continue NextWhitelistItem
+			}
+		}
+		result[key] = value
+	}
 
 	return result
 }
