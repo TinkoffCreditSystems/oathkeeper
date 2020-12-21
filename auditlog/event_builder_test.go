@@ -41,11 +41,11 @@ func TestEventBuilder_UnmarshalJSON(t *testing.T) {
 			}, nil},
 	}
 
-	for _, test := range tests {
+	for _, tst := range tests {
 		var result EventBuilder
-		err := json.Unmarshal(test.inp, &result)
-		assert.Equal(t, test.b, &result)
-		assert.IsType(t, test.err, err)
+		err := json.Unmarshal(tst.inp, &result)
+		assert.Equal(t, tst.b, &result)
+		assert.IsType(t, tst.err, err)
 	}
 }
 
@@ -106,8 +106,8 @@ func TestEventBuilder_Match(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		assert.Equal(t, test.match, test.b.Match(test.url, test.method))
+	for _, tst := range tests {
+		assert.Equal(t, tst.match, tst.b.Match(tst.url, tst.method))
 	}
 }
 
@@ -290,9 +290,155 @@ func TestEventBuilder_Build(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		event, err := test.b.Build(test.req, test.resp, test.err)
-		assert.Equal(t, test.resEvent, *event)
-		assert.IsType(t, test.err, err)
+	for _, tst := range tests {
+		event, err := tst.b.Build(tst.req, tst.resp, tst.err)
+		assert.Equal(t, tst.resEvent, *event)
+		assert.IsType(t, tst.err, err)
+	}
+}
+
+func TestDeserializeEventBuildersFromBytes(t *testing.T) {
+	tests := []struct {
+		config []byte
+		schema []byte
+		bs     []EventBuilder
+		hasErr bool
+	}{
+		{
+			config: nil,
+			schema: nil,
+			bs:     nil,
+			hasErr: true,
+		},
+		{
+			config: nil,
+			schema: []byte(``),
+			bs:     nil,
+			hasErr: true,
+		},
+		{
+			config: nil,
+			schema: []byte(`{`),
+			bs:     nil,
+			hasErr: true,
+		},
+		{
+			config: nil,
+			schema: []byte(`{}`),
+			bs:     nil,
+			hasErr: true,
+		},
+		{
+			config: []byte(`[{
+				"url_pattern": "http://(localhost|127.0.0.1):8080/return200",
+				"http_method": "GET",
+				"filter": {
+					"request_header": ["User-Agent"]
+				},
+				"description_template": "Curl GET to localhost returned {{meta.response_code}}"
+				},
+				{
+					"url_pattern": "http://(localhost|127.0.0.1):8080/return200",
+					"http_method": "POST",
+					"filter": {
+					"request_header": ["User-Agent"],
+						"request_body": ["a.b.c", "d"],
+						"response_body": ["status"]
+					},
+					"description_template": "Curl POST to localhost returned {{meta.response_code}}"
+				}
+			]`),
+			schema: []byte(`{
+				"type": "array",
+				"items": {
+					"$ref": "#/definitions/EventHandler"
+				},
+				"default": [],
+				"uniqueItems": true,
+				"definitions": {
+					"EventHandler": {
+						"type": "object",
+						"required": [
+							"url_pattern",
+							"http_method",
+							"filter",
+							"description_template"
+						],
+						"properties": {
+							"url_pattern": {"type": "string"},
+							"http_method": {"type": "string"},
+							"filter": {"type": "object"},
+							"description_template": {"type": "string"}
+						}
+					}
+				}
+            }`),
+			bs: []EventBuilder{
+				{
+					URLPattern: "http://(localhost|127.0.0.1):8080/return200",
+					r:          regexp.MustCompile("http://(localhost|127.0.0.1):8080/return200"),
+					Method:     "GET",
+					Filter: Filter{
+						RequestHeaderWhiteList: []string{"User-Agent"},
+					},
+					DescriptionTemplate: "Curl GET to localhost returned {{meta.response_code}}",
+				},
+				{
+					URLPattern: "http://(localhost|127.0.0.1):8080/return200",
+					r:          regexp.MustCompile("http://(localhost|127.0.0.1):8080/return200"),
+					Method:     "POST",
+					Filter: Filter{
+						RequestHeaderWhiteList: []string{"User-Agent"},
+						RequestBodyWhiteList:   []string{"a.b.c", "d"},
+						ResponseBodyWhiteList:  []string{"status"},
+					},
+					DescriptionTemplate: "Curl POST to localhost returned {{meta.response_code}}",
+				},
+			},
+			hasErr: false,
+		},
+		{
+			config: []byte(`[{
+				"wrong_field": "here",
+				"another_wrong_field": "yes"
+			}]`),
+			schema: []byte(`{
+				"type": "array",
+				"items": {
+					"$ref": "#/definitions/EventHandler"
+				},
+				"default": [],
+				"uniqueItems": true,
+				"definitions": {
+					"EventHandler": {
+						"type": "object",
+						"required": [
+							"url_pattern",
+							"http_method",
+							"filter",
+							"description_template"
+						],
+						"properties": {
+							"url_pattern": {"type": "string"},
+							"http_method": {"type": "string"},
+							"filter": {"type": "object"},
+							"description_template": {"type": "string"}
+						}
+					}
+				}
+            }`),
+			bs:     nil,
+			hasErr: true,
+		},
+	}
+
+	for _, tst := range tests {
+		if bs, err := DeserializeEventBuildersFromBytes(tst.config, tst.schema); tst.hasErr {
+			assert.NotNil(t, err)
+			assert.Nil(t, bs)
+		} else {
+			assert.Nil(t, err)
+			assert.Equal(t, tst.bs, bs)
+		}
 	}
 }

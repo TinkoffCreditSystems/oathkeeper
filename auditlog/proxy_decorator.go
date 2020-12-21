@@ -29,9 +29,16 @@ type ProxyAuditLogDecorator struct {
 
 // NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
 func NewProxyAuditLogDecorator(proxy proxy.Proxy, config configuration.Provider, logger *logrusx.Logger) *ProxyAuditLogDecorator {
+	bs, err := DeserializeEventBuildersFromFiles(config.AuditLogConfigPath(), config.AuditLogSchemaPath())
+	if err != nil {
+		logger.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("Audit Log initialization error")
+	}
+
 	d := &ProxyAuditLogDecorator{
 		p: proxy,
-		b: DeserializeEventBuilders(config.AuditLogConfigPath(), config.AuditLogSchemaPath(), logger),
+		b: bs,
 		s: make([]Sender, 0),
 		l: logger,
 	}

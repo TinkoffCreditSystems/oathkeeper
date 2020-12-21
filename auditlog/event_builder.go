@@ -2,6 +2,7 @@ package auditlog
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -9,12 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/ory/gojsonschema"
 	"github.com/ory/oathkeeper/pipeline/authn"
 	"github.com/ory/oathkeeper/proxy"
-	"github.com/ory/x/logrusx"
 )
 
 // EventBuilder is a type to build the Event structure.
@@ -154,70 +152,56 @@ func filterHeader(h http.Header, wl []string) map[string]string {
 	return result
 }
 
-// DeserializeEventBuilders validates and deserializes an array of event builders using file with path "path".
-func DeserializeEventBuilders(configPath, schemaPath string, logger *logrusx.Logger) []EventBuilder {
-	validateJSONConfigSchema(configPath, schemaPath, logger)
-	return deserializeJSONConfig(configPath, logger)
+// DeserializeEventBuildersFromFiles validates and deserializes an array of event builders.
+func DeserializeEventBuildersFromFiles(configPath, schemaPath string) ([]EventBuilder, error) {
+	config, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return DeserializeEventBuildersFromBytes(config, schema)
+}
+
+// DeserializeEventBuildersFromBytes validates and deserializes an array of event builders.
+func DeserializeEventBuildersFromBytes(config, schema []byte) ([]EventBuilder, error) {
+	if err := validateJSONConfigSchema(string(config), string(schema)); err != nil {
+		return nil, err
+	}
+	return deserializeJSONConfig(config)
 }
 
 // validateJSONConfigSchema checks if config file fits JSON schema.
-func validateJSONConfigSchema(configPath, schemaPath string, logger *logrusx.Logger) {
-	documentLoader := gojsonschema.NewReferenceLoader(configPath)
-	schemaLoader := gojsonschema.NewReferenceLoader(schemaPath)
+func validateJSONConfigSchema(config, schema string) error {
+	configLoader := gojsonschema.NewStringLoader(config)
+	schemaLoader := gojsonschema.NewStringLoader(schema)
 
-	if result, err := gojsonschema.Validate(schemaLoader, documentLoader); err != nil {
-		logger.WithFields(log.Fields{
-			"error": err,
-			"file":  schemaLoader.JsonSource(),
-		}).Fatal("Error while validating Audit Log configuration")
+	if result, err := gojsonschema.Validate(schemaLoader, configLoader); err != nil {
+		return err
 	} else {
 		if !result.Valid() {
-			for _, desc := range result.Errors() {
-				logger.WithFields(log.Fields{
-					"error": desc,
-					"file":  documentLoader.JsonSource(),
-				}).Error("Error while validating Audit Log configuration")
+			descriptions := make([]string, 0)
+			for _, d := range result.Errors() {
+				descriptions = append(descriptions, d.String())
 			}
-			logger.WithFields(log.Fields{
-				"file": documentLoader.JsonSource(),
-			}).Fatal("Error while validating Audit Log configuration")
+			return errors.New(strings.Join(descriptions, ";"))
 		}
 	}
+	return nil
 }
 
 // deserializeJSONConfig takes the path of file which was checked to fit JSON schema
 // and deserializes it to the array of EventBuilder
-func deserializeJSONConfig(path string, logger *logrusx.Logger) []EventBuilder {
-	// An alternative way to deserialize data is to use documentLoader.LoadJSON.
-	// That way is more secure because of deserializing assuredly the same data which
-	// was validated through schema and be no afraid if file was changed.
-	// But that way requires a lot of manual work with JSON unmarshalling using interface{}.
-	// We'll just use Go default JSON Unmarshall.
-
-	if !strings.HasPrefix(path, "file://") {
-		logger.WithFields(log.Fields{
-			"file": path,
-		}).Fatal("Only reading from file:// is implemented")
-	}
-
-	p := strings.TrimPrefix(path, "file://")
-
-	f, err := ioutil.ReadFile(p)
-	if err != nil {
-		logger.WithFields(log.Fields{
-			"error": err,
-			"file":  path,
-		}).Fatal("Error while validating Audit Log configuration")
-	}
-
+func deserializeJSONConfig(config []byte) ([]EventBuilder, error) {
 	var builders []EventBuilder
 
-	if err = json.Unmarshal(f, &builders); err != nil {
-		logger.WithFields(log.Fields{
-			"error": err,
-			"file":  path,
-		}).Fatal("Error while validating Audit Log configuration")
+	if err := json.Unmarshal(config, &builders); err != nil {
+		return nil, err
 	}
 
-	return builders
+	return builders, nil
 }
