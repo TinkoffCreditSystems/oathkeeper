@@ -8,14 +8,13 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/ory/x/logrusx"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/ory/gojsonschema"
 	"github.com/ory/oathkeeper/pipeline/authn"
 	"github.com/ory/oathkeeper/proxy"
+	"github.com/ory/x/logrusx"
 )
 
 // EventBuilder is a type to build the Event structure.
@@ -80,7 +79,6 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 		e.Meta["method"] = req.Method
 		e.Meta["url"] = req.URL.String()
 		e.Meta["user_ip"] = req.RemoteAddr
-		e.Timestamp = time.Now()
 
 		if sess, ok := req.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
 			e.Meta["user_id"] = sess.Subject
@@ -102,6 +100,7 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 	}
 
 	// TODO generate Description.
+	e.Description = ""
 
 	return &e, nil
 }
@@ -124,12 +123,18 @@ func filterBody(b io.ReadCloser, wl []string) map[string]interface{} {
 		return result
 	}
 
-	NextWhitelistItem:
+NextWhitelistItem:
 	for _, key := range wl {
 		var value interface{} = body
 		for _, k := range strings.Split(key, ".") {
 			var ok bool
-			value, ok = value.(map[string]interface{})[k]
+
+			m, ok := value.(map[string]interface{})
+			if !ok {
+				continue NextWhitelistItem
+			}
+
+			value, ok = m[k]
 			if !ok {
 				continue NextWhitelistItem
 			}

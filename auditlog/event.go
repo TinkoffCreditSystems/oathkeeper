@@ -1,13 +1,7 @@
 package auditlog
 
-import (
-	"time"
-)
-
 // Event is a type for the Audit Log event intermediate representation.
 type Event struct {
-	Timestamp time.Time
-
 	// Description of the event in human-readable format.
 	Description string
 
@@ -23,10 +17,12 @@ type Event struct {
 
 func NewEvent() Event {
 	return Event{
-		RequestHeader:  make(map[string]string),
-		RequestBody:    make(map[string]interface{}),
-		ResponseHeader: make(map[string]string),
-		ResponseBody:   make(map[string]interface{}),
-		Meta:           make(map[string]string),
+		Description:     "",
+		RequestHeader:   make(map[string]string),
+		RequestBody:     make(map[string]interface{}),
+		ResponseHeader:  make(map[string]string),
+		ResponseBody:    make(map[string]interface{}),
+		Meta:            make(map[string]string),
+		OathkeeperError: nil,
 	}
 }
