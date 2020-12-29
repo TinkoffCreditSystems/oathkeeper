@@ -8,9 +8,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/ory/x/logrusx"
+
 	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/proxy"
-	"github.com/ory/x/logrusx"
 )
 
 // RoundTripper interface is implemented by the Proxy structure and it's decorators.
@@ -21,34 +22,36 @@ type RoundTripper interface {
 
 // ProxyAuditLogDecorator is a wrapper for Proxy struct with audit logging abilities.
 type ProxyAuditLogDecorator struct {
-	p proxy.Proxy
-	b []EventBuilder
-	s []Sender
-	l *logrusx.Logger
+	proxy    RoundTripper
+	builders []EventBuilder
+	senders  []Sender
+	logger   *logrusx.Logger
 }
 
-// NewProxyAuditLogDecorator creates new ProxyAuditLogDecorator.
-func NewProxyAuditLogDecorator(proxy proxy.Proxy, config configuration.Provider, logger *logrusx.Logger) *ProxyAuditLogDecorator {
+func NewProxyAuditLogDecoratorFromFile(proxy *proxy.Proxy, config configuration.Provider,
+	logger *logrusx.Logger) (*ProxyAuditLogDecorator, error) {
 	bs, err := DeserializeEventBuildersFromFiles(config.AuditLogConfigPath(), config.AuditLogSchemaPath())
 	if err != nil {
-		logger.WithFields(log.Fields{
-			"error": err,
-		}).Fatal("Audit Log initialization error")
+		return nil, err
 	}
+	return NewProxyAuditLogDecoratorFromEventBuilders(proxy, config, logger, bs)
+}
 
+func NewProxyAuditLogDecoratorFromEventBuilders(proxy *proxy.Proxy, config configuration.Provider,
+	logger *logrusx.Logger, bs []EventBuilder) (*ProxyAuditLogDecorator, error) {
 	d := &ProxyAuditLogDecorator{
-		p: proxy,
-		b: bs,
-		s: make([]Sender, 0),
-		l: logger,
+		proxy:    proxy,
+		builders: bs,
+		senders:  make([]Sender, 0),
+		logger:   logger,
 	}
 
-	d.s = append(d.s, &StdoutSender{l: logger})
+	d.senders = append(d.senders, &StdoutSender{l: logger})
 	if config.AuditLogKafkaEnabled() {
-		d.s = append(d.s, &KafkaSender{})
+		d.senders = append(d.senders, &KafkaSender{})
 	}
 
-	return d
+	return d, nil
 }
 
 // RoundTrip performs wrapped structure's RoundTrip and logs request's event.
@@ -56,16 +59,16 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 	// Copy request body.
 	var reqBodyCopy io.ReadCloser = nil
 	if req != nil {
-		req.Body, reqBodyCopy = copyBody(req.Body, d.l)
+		req.Body, reqBodyCopy = copyBody(req.Body, d.logger)
 	}
 
 	// Send request.
-	resp, err := d.p.RoundTrip(req)
+	resp, err := d.proxy.RoundTrip(req)
 
 	// Copy response body.
 	var respBodyCopy io.ReadCloser = nil
 	if resp != nil {
-		resp.Body, respBodyCopy = copyBody(resp.Body, d.l)
+		resp.Body, respBodyCopy = copyBody(resp.Body, d.logger)
 	}
 
 	// Log event.
@@ -87,15 +90,14 @@ func copyBody(rc io.ReadCloser, logger *logrusx.Logger) (a, b io.ReadCloser) {
 
 // Director performs wrapped structure's Director.
 func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
-	d.p.Director(r)
+	d.proxy.Director(r)
 }
 
-// saveEvent builds event and logs it if needed.
 func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmutable *http.Response,
 	reqBodyCopy, respBodyCopy io.ReadCloser, roundTripError error) {
 
 	if reqImmutable == nil {
-		d.l.Error("Request struct is nil")
+		d.logger.Error("Request struct is nil")
 		return
 	}
 
@@ -107,14 +109,14 @@ func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmut
 	resp.Body = respBodyCopy
 
 	// Log event.
-	for _, b := range d.b {
+	for _, b := range d.builders {
 		if b.Match(req.URL.String(), req.Method) {
 			if event, err := b.Build(req, resp, roundTripError); err == nil {
-				for _, s := range d.s {
+				for _, s := range d.senders {
 					s.Send(*event)
 				}
 			} else {
-				d.l.WithFields(log.Fields{"error": err}).Error("Error while building event for audit log")
+				d.logger.WithFields(log.Fields{"error": err}).Error("Error while building event for audit log")
 			}
 		}
 	}

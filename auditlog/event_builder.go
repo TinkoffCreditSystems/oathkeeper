@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/ory/gojsonschema"
+
 	"github.com/ory/oathkeeper/pipeline/authn"
 	"github.com/ory/oathkeeper/proxy"
 )
