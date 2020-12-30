@@ -184,7 +184,13 @@ func RunServe(version, build, date string) func(cmd *cobra.Command, args []strin
 	return func(cmd *cobra.Command, args []string) {
 		fmt.Println(banner(version))
 
-		logger := logrusx.New("ORY Oathkeeper", version)
+		logFormat := "json"
+
+		if f := viper.GetString("log.format"); f != "" {
+			logFormat = f
+		}
+
+		logger := logrusx.New("ORY Oathkeeper", version, logrusx.ForceFormat(logFormat))
 		d := driver.NewDefaultDriver(logger, version, build, date)
 		d.Registry().Init()
 
