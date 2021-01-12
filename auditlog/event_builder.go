@@ -21,7 +21,6 @@ type EventBuilder struct {
 	URLPattern string `json:"url_pattern"`
 	Method     string `json:"http_method"`
 	Filter     Filter `json:"filter"`
-	// Logger string `json:"logger"`
 	DescriptionTemplate string `json:"description_template"`
 
 	r *regexp.Regexp
