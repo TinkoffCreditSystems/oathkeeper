@@ -10,11 +10,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gobuffalo/packr/v2"
 	"github.com/ory/gojsonschema"
 
 	"github.com/ory/oathkeeper/pipeline/authn"
 	"github.com/ory/oathkeeper/proxy"
 )
+
+var schemas = packr.New("schemas", "../../.schema")
+
+const auditLogConfigSchemaPath = "auditlog.schema.json"
 
 // EventBuilder is a type to build the Event structure.
 type EventBuilder struct {
@@ -143,13 +148,13 @@ func filterHeader(h http.Header, wl []string) map[string]string {
 }
 
 // DeserializeEventBuildersFromFiles validates and deserializes an array of event builders.
-func DeserializeEventBuildersFromFiles(configPath, schemaPath string) ([]EventBuilder, error) {
+func DeserializeEventBuildersFromFiles(configPath string) ([]EventBuilder, error) {
 	config, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := schemas.Find(auditLogConfigSchemaPath)
 	if err != nil {
 		return nil, err
 	}

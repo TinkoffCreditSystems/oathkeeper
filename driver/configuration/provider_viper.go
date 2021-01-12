@@ -455,10 +455,6 @@ func (v *ViperProvider) AuditLogConfigPath() string {
 	return viperx.GetString(v.l, ViperAuditLogConfigPath, "")
 }
 
-func (v *ViperProvider) AuditLogSchemaPath() string {
-	return viperx.GetString(v.l, ViperAuditLogSchemaPath, "")
-}
-
 func (v *ViperProvider) AuditLogKafkaEnabled() bool {
 	return viperx.GetBool(v.l, ViperAuditLogKafkaEnabled, false)
 }

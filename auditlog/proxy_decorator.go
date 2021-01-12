@@ -30,7 +30,7 @@ type ProxyAuditLogDecorator struct {
 
 func NewProxyAuditLogDecoratorFromFile(proxy *proxy.Proxy, config configuration.Provider,
 	logger *logrusx.Logger) (*ProxyAuditLogDecorator, error) {
-	bs, err := DeserializeEventBuildersFromFiles(config.AuditLogConfigPath(), config.AuditLogSchemaPath())
+	bs, err := DeserializeEventBuildersFromFiles(config.AuditLogConfigPath())
 	if err != nil {
 		return nil, err
 	}

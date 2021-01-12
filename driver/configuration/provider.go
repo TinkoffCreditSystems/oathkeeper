@@ -66,7 +66,6 @@ type Provider interface {
 
 	AuditLogEnabled() bool
 	AuditLogConfigPath() string
-	AuditLogSchemaPath() string
 	AuditLogKafkaEnabled() bool
 	AuditLogKafkaURL() string
 	AuditLogKafkaTopic() string
