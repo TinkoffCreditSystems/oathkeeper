@@ -18,9 +18,9 @@ import (
 
 // EventBuilder is a type to build the Event structure.
 type EventBuilder struct {
-	URLPattern string `json:"url_pattern"`
-	Method     string `json:"http_method"`
-	Filter     Filter `json:"filter"`
+	URLPattern          string `json:"url_pattern"`
+	Method              string `json:"http_method"`
+	Filter              Filter `json:"filter"`
 	DescriptionTemplate string `json:"description_template"`
 
 	r *regexp.Regexp
