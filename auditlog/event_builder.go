@@ -58,15 +58,7 @@ func (b *EventBuilder) UnmarshalJSON(raw []byte) error {
 
 // Match method verifies if this builder must be applied to request with given url and method.
 func (b *EventBuilder) Match(url, method string) bool {
-	if b.Method != method {
-		return false
-	}
-
-	if !b.r.MatchString(url) {
-		return false
-	}
-
-	return true
+	return strings.EqualFold(b.Method, method) && b.r.MatchString(url)
 }
 
 // Build method performs filtering of data using rules from config.
