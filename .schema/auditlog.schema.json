@@ -8,7 +8,7 @@
   "uniqueItems": true,
   "definitions": {
     "EventHandler": {
-      "description": "Event is a handler for single event",
+      "description": "EventHandler is a handler for single event",
       "type": "object",
       "required": [
         "url_pattern",
