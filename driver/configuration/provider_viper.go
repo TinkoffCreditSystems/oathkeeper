@@ -120,12 +120,11 @@ const (
 
 // AuditLog
 const (
-	ViperAuditLogEnabled = "auditlog.enabled"
-	ViperAuditLogConfigPath = "auditlog.config"
-	ViperAuditLogSchemaPath = "auditlog.schema"
-	ViperAuditLogKafkaEnabled   = "auditlog.kafka.enabled"
-	ViperAuditLogKafkaURL   = "auditlog.kafka.url"
-	ViperAuditLogKafkaTopic = "auditlog.kafka.topic"
+	ViperAuditLogEnabled      = "auditlog.enabled"
+	ViperAuditLogConfigPath   = "auditlog.config"
+	ViperAuditLogKafkaEnabled = "auditlog.kafka.enabled"
+	ViperAuditLogKafkaURL     = "auditlog.kafka.url"
+	ViperAuditLogKafkaTopic   = "auditlog.kafka.topic"
 )
 
 type ViperProvider struct {
