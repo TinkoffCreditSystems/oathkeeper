@@ -9,6 +9,7 @@ import (
 	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/proxy"
 	"github.com/ory/x/logrusx"
+	"github.com/pkg/errors"
 )
 
 // RoundTripper interface is implemented by the Proxy structure and it's decorators.
@@ -54,25 +55,39 @@ func NewProxyAuditLogDecoratorFromEventBuilders(proxy *proxy.Proxy, config confi
 
 // RoundTrip performs wrapped structure's RoundTrip and logs request's event.
 func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Copy request body.
-	var reqBodyCopy io.ReadCloser = nil
-	if req != nil {
-		req.Body, reqBodyCopy = copyBody(req.Body, d.logger)
+	if req == nil {
+		d.logger.Error("Request is nil")
+
+		return nil, errors.New("RoundTrip with nil request")
 	}
+
+	// Copy the request body before the request is sent further.
+	var reqBodyCopy io.ReadCloser
+	req.Body, reqBodyCopy = copyBody(req.Body, d.logger)
 
 	// Send request.
 	resp, err := d.proxy.RoundTrip(req)
 
-	// Copy response body.
-	var respBodyCopy io.ReadCloser = nil
+	// Deep copy request.
+	reqCopy := req.Clone(req.Context())
+	reqCopy.Body = reqBodyCopy
+
+	// Deep copy response.
+	respCopy := new(http.Response)
 	if resp != nil {
-		resp.Body, respBodyCopy = copyBody(resp.Body, d.logger)
+		*respCopy = *resp
+		resp.Body, respCopy.Body = copyBody(resp.Body, d.logger)
 	}
 
 	// Log event.
-	go d.saveEvent(req, resp, reqBodyCopy, respBodyCopy, err)
+	go d.saveEvent(reqCopy, respCopy, err)
 
 	return resp, err
+}
+
+// Director performs wrapped structure's Director.
+func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
+	d.proxy.Director(r)
 }
 
 func copyBody(rc io.Reader, logger *logrusx.Logger) (a, b io.ReadCloser) {
@@ -90,33 +105,7 @@ func copyBody(rc io.Reader, logger *logrusx.Logger) (a, b io.ReadCloser) {
 	return a, b
 }
 
-// Director performs wrapped structure's Director.
-func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
-	d.proxy.Director(r)
-}
-
-func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmutable *http.Response,
-	reqBodyCopy, respBodyCopy io.ReadCloser, roundTripError error) {
-	if reqImmutable == nil {
-		d.logger.Error("Request struct is nil")
-
-		return
-	}
-
-	if respImmutable == nil {
-		d.logger.Error("Response struct is nil")
-
-		return
-	}
-
-	// Deep copy request & response.
-	req := reqImmutable.Clone(reqImmutable.Context())
-	req.Body = reqBodyCopy
-	resp := new(http.Response)
-	*resp = *respImmutable
-	resp.Body = respBodyCopy
-
-	// Log event.
+func (d *ProxyAuditLogDecorator) saveEvent(req *http.Request, resp *http.Response, roundTripError error) {
 	for _, b := range d.builders {
 		if b.Match(req.URL.String(), req.Method) {
 			if event, err := b.Build(req, resp, roundTripError); err == nil {
