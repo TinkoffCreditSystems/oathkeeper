@@ -9,7 +9,6 @@ import (
 	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/proxy"
 	"github.com/ory/x/logrusx"
-	log "github.com/sirupsen/logrus"
 )
 
 // RoundTripper interface is implemented by the Proxy structure and it's decorators.
@@ -125,7 +124,7 @@ func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmut
 					s.Send(*event)
 				}
 			} else {
-				d.logger.WithFields(log.Fields{"error": err}).Error("Error while building event for audit log")
+				d.logger.WithError(err).Error("Error while building event for audit log")
 			}
 		}
 	}
