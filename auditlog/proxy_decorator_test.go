@@ -5,12 +5,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"sync"
 	"testing"
 
+	"github.com/ory/x/logrusx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/ory/x/logrusx"
 )
 
 type MockProxy struct {
@@ -32,10 +32,14 @@ func (m *MockProxy) Director(r *http.Request) {
 
 type MockSender struct {
 	mock.Mock
+	mx *sync.Mutex
 }
 
 func (m *MockSender) Send(e Event) {
 	m.Called(e)
+
+	// Unlock mutex to run tests in parent goroutine.
+	m.mx.Unlock()
 }
 
 func TestProxyAuditLogDecorator_Director(t *testing.T) {
@@ -112,7 +116,10 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 			DescriptionTemplate: "Curl GET to localhost returned {{meta.response_code}}",
 		},
 	}
-	sender := &MockSender{}
+
+	// Mutex mx to wait for child goroutine to run mock sender.
+	var mx sync.Mutex
+	sender := &MockSender{mx: &mx}
 
 	decorator := ProxyAuditLogDecorator{
 		proxy:    proxy,
@@ -133,8 +140,12 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 			"status_code": "0",
 			"url":         "http://localhost:8080/return200",
 			"user_ip":     "",
-		}, OathkeeperError: error(nil)}).Return()
+		}, OathkeeperError: error(nil),
+	}).Return()
+	mx.Lock()
 	resp, err := decorator.RoundTrip(request)
+	mx.Lock()
+	defer mx.Unlock()
 	assert.Equal(t, resp, response)
 	assert.Nil(t, err)
 	proxy.AssertExpectations(t)

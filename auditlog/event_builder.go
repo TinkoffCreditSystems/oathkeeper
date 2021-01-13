@@ -12,7 +12,6 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/ory/gojsonschema"
-
 	"github.com/ory/oathkeeper/pipeline/authn"
 	"github.com/ory/oathkeeper/proxy"
 )
@@ -94,7 +93,7 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 		e.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)
 	}
 
-	// TODO generate Description.
+	// TODO(torilov) generate Description.
 	e.Description = ""
 
 	return &e, nil
@@ -176,14 +175,12 @@ func validateJSONConfigSchema(config, schema string) error {
 
 	if result, err := gojsonschema.Validate(schemaLoader, configLoader); err != nil {
 		return err
-	} else {
-		if !result.Valid() {
-			descriptions := make([]string, 0)
-			for _, d := range result.Errors() {
-				descriptions = append(descriptions, d.String())
-			}
-			return errors.New(strings.Join(descriptions, ";"))
+	} else if !result.Valid() {
+		descriptions := make([]string, 0)
+		for _, d := range result.Errors() {
+			descriptions = append(descriptions, d.String())
 		}
+		return errors.New(strings.Join(descriptions, ";"))
 	}
 	return nil
 }

@@ -6,12 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
-
-	"github.com/ory/x/logrusx"
-
 	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/proxy"
+	"github.com/ory/x/logrusx"
+	log "github.com/sirupsen/logrus"
 )
 
 // RoundTripper interface is implemented by the Proxy structure and it's decorators.
@@ -95,7 +93,6 @@ func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
 
 func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmutable *http.Response,
 	reqBodyCopy, respBodyCopy io.ReadCloser, roundTripError error) {
-
 	if reqImmutable == nil {
 		d.logger.Error("Request struct is nil")
 		return

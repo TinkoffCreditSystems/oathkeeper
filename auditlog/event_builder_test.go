@@ -8,10 +8,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/ory/oathkeeper/pipeline/authn"
 	"github.com/ory/oathkeeper/proxy"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEventBuilder_UnmarshalJSON(t *testing.T) {
@@ -27,18 +26,24 @@ func TestEventBuilder_UnmarshalJSON(t *testing.T) {
 		{[]byte(`{}`), &EventBuilder{r: regexp.MustCompile("")}, nil},
 		{[]byte(`{"not_exists": "ok"}`), &EventBuilder{r: regexp.MustCompile("")}, nil},
 
-		{[]byte(`{"url_pattern": "http://(127.0.0.1|localhost):8080/api"}`),
-			&EventBuilder{URLPattern: "http://(127.0.0.1|localhost):8080/api",
-				r: regexp.MustCompile("http://(127.0.0.1|localhost):8080/api")}, nil},
+		{
+			[]byte(`{"url_pattern": "http://(127.0.0.1|localhost):8080/api"}`),
+			&EventBuilder{
+				URLPattern: "http://(127.0.0.1|localhost):8080/api",
+				r:          regexp.MustCompile("http://(127.0.0.1|localhost):8080/api"),
+			}, nil,
+		},
 
-		{[]byte(`{"filter": {"request_header": ["User-Agent"], "request_body": ["a", "a.b.c"]}}`),
+		{
+			[]byte(`{"filter": {"request_header": ["User-Agent"], "request_body": ["a", "a.b.c"]}}`),
 			&EventBuilder{
 				Filter: Filter{
 					RequestHeaderWhiteList: []string{"User-Agent"},
 					RequestBodyWhiteList:   []string{"a", "a.b.c"},
 				},
 				r: regexp.MustCompile(""),
-			}, nil},
+			}, nil,
+		},
 	}
 
 	for _, tst := range tests {

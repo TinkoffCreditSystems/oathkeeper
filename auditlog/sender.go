@@ -1,9 +1,8 @@
 package auditlog
 
 import (
-	log "github.com/sirupsen/logrus"
-
 	"github.com/ory/x/logrusx"
+	log "github.com/sirupsen/logrus"
 )
 
 // Sender is an interface to perform sending events to auditlog.
@@ -29,5 +28,5 @@ type KafkaSender struct{}
 
 // Send sends event info to kafka.
 func (s *KafkaSender) Send(e Event) {
-	// TODO
+	// TODO(torilov) implement kafka sender.
 }
