@@ -22,6 +22,7 @@ type MockProxy struct {
 
 func (m *MockProxy) RoundTrip(r *http.Request) (*http.Response, error) {
 	m.Called(r)
+
 	return m.roundTrip(m.t, r)
 }
 
@@ -49,6 +50,7 @@ func TestProxyAuditLogDecorator_Director(t *testing.T) {
 	}
 
 	decorator := ProxyAuditLogDecorator{proxy: proxy}
+
 	proxy.On("Director", request).Return()
 	decorator.Director(request)
 	proxy.AssertExpectations(t)
@@ -89,8 +91,10 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 
 	for _, tst := range tests {
 		decorator := ProxyAuditLogDecorator{proxy: tst.proxy}
+
 		tst.proxy.On("RoundTrip", tst.request).Return(tst.response, nil)
 		resp, err := decorator.RoundTrip(tst.request)
+
 		assert.Equal(t, resp, tst.response)
 		assert.Nil(t, err)
 		tst.proxy.AssertExpectations(t)
@@ -119,6 +123,7 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 
 	// Mutex mx to wait for child goroutine to run mock sender.
 	var mx sync.Mutex
+
 	sender := &MockSender{mx: &mx}
 
 	decorator := ProxyAuditLogDecorator{
@@ -144,6 +149,7 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 	}).Return()
 	mx.Lock()
 	resp, err := decorator.RoundTrip(request)
+
 	mx.Lock()
 	defer mx.Unlock()
 	assert.Equal(t, resp, response)

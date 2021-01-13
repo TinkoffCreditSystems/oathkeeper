@@ -136,6 +136,7 @@ func TestEventBuilder_Build(t *testing.T) {
 		{
 			req: func() *http.Request {
 				req, _ := http.NewRequest("GET", "http://example.com", nil)
+
 				return req
 			}(),
 			resp: nil,
@@ -165,6 +166,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					"http://example.com",
 					bytes.NewBuffer([]byte(`{`)),
 				)
+
 				return req
 			}(),
 			resp: nil,
@@ -196,6 +198,7 @@ func TestEventBuilder_Build(t *testing.T) {
 				)
 				req.Header.Add("User-Agent", "curl")
 				req.Header.Add("Not-Used", "yes")
+
 				return req
 			}(),
 			resp: nil,
@@ -233,6 +236,7 @@ func TestEventBuilder_Build(t *testing.T) {
 				)
 				req = req.WithContext(context.WithValue(req.Context(), proxy.ContextKeySession,
 					&authn.AuthenticationSession{Subject: "user_id_1234"}))
+
 				return req
 			}(),
 			resp: nil,
@@ -263,6 +267,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					"http://example.com",
 					bytes.NewBuffer([]byte(`{"a": {"b": {"c": "123", "d": "qwe"}, "e": "abc"}, "f": "42"}`)),
 				)
+
 				return req
 			}(),
 			resp: nil,

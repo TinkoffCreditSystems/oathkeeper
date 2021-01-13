@@ -32,6 +32,7 @@ func NewProxyAuditLogDecoratorFromFile(proxy *proxy.Proxy, config configuration.
 	if err != nil {
 		return nil, err
 	}
+
 	return NewProxyAuditLogDecoratorFromEventBuilders(proxy, config, logger, bs)
 }
 
@@ -71,18 +72,22 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 
 	// Log event.
 	go d.saveEvent(req, resp, reqBodyCopy, respBodyCopy, err)
+
 	return resp, err
 }
 
-func copyBody(rc io.ReadCloser, logger *logrusx.Logger) (a, b io.ReadCloser) {
+func copyBody(rc io.Reader, logger *logrusx.Logger) (a, b io.ReadCloser) {
 	if rc != nil {
 		body, err := ioutil.ReadAll(rc)
 		if err != nil {
 			logger.Error("Error reading request body in RoundTrip")
 		}
+
 		a = ioutil.NopCloser(bytes.NewReader(body))
+
 		b = ioutil.NopCloser(bytes.NewReader(body))
 	}
+
 	return a, b
 }
 
@@ -95,10 +100,13 @@ func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmut
 	reqBodyCopy, respBodyCopy io.ReadCloser, roundTripError error) {
 	if reqImmutable == nil {
 		d.logger.Error("Request struct is nil")
+
 		return
 	}
+
 	if respImmutable == nil {
 		d.logger.Error("Response struct is nil")
+
 		return
 	}
 

@@ -99,7 +99,7 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 	return &e, nil
 }
 
-func filterBody(b io.ReadCloser, wl []string) map[string]interface{} {
+func filterBody(b io.Reader, wl []string) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	if b == nil {
@@ -143,6 +143,7 @@ func filterHeader(h http.Header, wl []string) map[string]string {
 	for _, key := range wl {
 		result[key] = h.Get(key)
 	}
+
 	return result
 }
 
@@ -166,6 +167,7 @@ func DeserializeEventBuildersFromBytes(config, schema []byte) ([]EventBuilder, e
 	if err := validateJSONConfigSchema(string(config), string(schema)); err != nil {
 		return nil, err
 	}
+
 	return deserializeJSONConfig(config)
 }
 
@@ -180,8 +182,10 @@ func validateJSONConfigSchema(config, schema string) error {
 		for _, d := range result.Errors() {
 			descriptions = append(descriptions, d.String())
 		}
+
 		return errors.New(strings.Join(descriptions, ";"))
 	}
+
 	return nil
 }
 
