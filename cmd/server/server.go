@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httputil"
 	"sync"
@@ -43,9 +42,7 @@ func runProxy(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom 
 			var err error
 			rt, err = auditlog.NewProxyAuditLogDecoratorFromFile(d.Registry().Proxy(), d.Configuration(), d.Registry().Logger())
 			if err != nil {
-				logger.WithFields(log.Fields{
-					"error": err,
-				}).Fatal("Audit Log initialization error")
+				logger.WithError(err).Fatal("Audit Log initialization error")
 			}
 			logger.Info("Audit Log Enabled")
 		} else {
