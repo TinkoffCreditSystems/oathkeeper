@@ -97,6 +97,10 @@ func (d *ProxyAuditLogDecorator) saveEvent(reqImmutable *http.Request, respImmut
 		d.logger.Error("Request struct is nil")
 		return
 	}
+	if respImmutable == nil {
+		d.logger.Error("Response struct is nil")
+		return
+	}
 
 	// Deep copy request & response.
 	req := reqImmutable.Clone(reqImmutable.Context())
