@@ -98,6 +98,16 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 		assert.Equal(t, resp, tst.response)
 		assert.Nil(t, err)
 		tst.proxy.AssertExpectations(t)
+
+		if tst.response.Body != nil {
+			err = tst.response.Body.Close()
+			assert.Nil(t, err)
+		}
+
+		if resp.Body != nil {
+			err = resp.Body.Close()
+			assert.Nil(t, err)
+		}
 	}
 }
 
@@ -156,4 +166,14 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 	assert.Nil(t, err)
 	proxy.AssertExpectations(t)
 	sender.AssertExpectations(t)
+
+	if response.Body != nil {
+		err = response.Body.Close()
+		assert.Nil(t, err)
+	}
+
+	if resp.Body != nil {
+		err = resp.Body.Close()
+		assert.Nil(t, err)
+	}
 }

@@ -62,8 +62,14 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 	}
 
 	// Copy the request body before the request is sent further.
-	var reqBodyCopy io.ReadCloser
-	req.Body, reqBodyCopy = copyBody(req.Body, d.logger)
+	var reqBodyCopy, reqNewBody io.ReadCloser
+	reqNewBody, reqBodyCopy = copyBody(req.Body, d.logger)
+
+	if req.Body != nil {
+		req.Body.Close()
+	}
+
+	req.Body = reqNewBody
 
 	// Send request.
 	resp, err := d.proxy.RoundTrip(req)
@@ -74,9 +80,18 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 
 	// Deep copy response.
 	respCopy := new(http.Response)
+
 	if resp != nil {
+		var respNewBody io.ReadCloser
+
 		*respCopy = *resp
-		resp.Body, respCopy.Body = copyBody(resp.Body, d.logger)
+		respNewBody, respCopy.Body = copyBody(resp.Body, d.logger)
+
+		if resp.Body != nil {
+			resp.Body.Close()
+		}
+
+		resp.Body = respNewBody
 	}
 
 	// Log event.
@@ -106,6 +121,14 @@ func copyBody(rc io.Reader, logger *logrusx.Logger) (a, b io.ReadCloser) {
 }
 
 func (d *ProxyAuditLogDecorator) saveEvent(req *http.Request, resp *http.Response, roundTripError error) {
+	if req.Body != nil {
+		defer req.Body.Close()
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
 	for _, b := range d.builders {
 		if b.Match(req.URL.String(), req.Method) {
 			if event, err := b.Build(req, resp, roundTripError); err == nil {
