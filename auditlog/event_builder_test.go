@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 	"testing"
@@ -339,50 +340,22 @@ func TestDeserializeEventBuildersFromBytes(t *testing.T) {
 			hasErr: true,
 		},
 		{
-			config: []byte(`[{
-				"url_pattern": "http://(localhost|127.0.0.1):8080/return200",
-				"http_method": "GET",
-				"filter": {
-					"request_header": ["User-Agent"]
-				},
-				"description_template": "Curl GET to localhost returned {{meta.response_code}}"
-				},
-				{
-					"url_pattern": "http://(localhost|127.0.0.1):8080/return200",
-					"http_method": "POST",
-					"filter": {
-					"request_header": ["User-Agent"],
-						"request_body": ["a.b.c", "d"],
-						"response_body": ["status"]
-					},
-					"description_template": "Curl POST to localhost returned {{meta.response_code}}"
+			config: func() []byte {
+				c, err := ioutil.ReadFile("./testdata/correct_config.json")
+				if err != nil {
+					panic(err)
 				}
-			]`),
-			schema: []byte(`{
-				"type": "array",
-				"items": {
-					"$ref": "#/definitions/EventHandler"
-				},
-				"default": [],
-				"uniqueItems": true,
-				"definitions": {
-					"EventHandler": {
-						"type": "object",
-						"required": [
-							"url_pattern",
-							"http_method",
-							"filter",
-							"description_template"
-						],
-						"properties": {
-							"url_pattern": {"type": "string"},
-							"http_method": {"type": "string"},
-							"filter": {"type": "object"},
-							"description_template": {"type": "string"}
-						}
-					}
+
+				return c
+			}(),
+			schema: func() []byte {
+				s, err := ioutil.ReadFile("../.schema/auditlog.schema.json")
+				if err != nil {
+					panic(err)
 				}
-			}`),
+
+				return s
+			}(),
 			bs: []EventBuilder{
 				{
 					URLPattern: "http://(localhost|127.0.0.1):8080/return200",
@@ -408,35 +381,22 @@ func TestDeserializeEventBuildersFromBytes(t *testing.T) {
 			hasErr: false,
 		},
 		{
-			config: []byte(`[{
-				"wrong_field": "here",
-				"another_wrong_field": "yes"
-			}]`),
-			schema: []byte(`{
-				"type": "array",
-				"items": {
-					"$ref": "#/definitions/EventHandler"
-				},
-				"default": [],
-				"uniqueItems": true,
-				"definitions": {
-					"EventHandler": {
-						"type": "object",
-						"required": [
-							"url_pattern",
-							"http_method",
-							"filter",
-							"description_template"
-						],
-						"properties": {
-							"url_pattern": {"type": "string"},
-							"http_method": {"type": "string"},
-							"filter": {"type": "object"},
-							"description_template": {"type": "string"}
-						}
-					}
+			config: func() []byte {
+				c, err := ioutil.ReadFile("./testdata/wrong_config.json")
+				if err != nil {
+					panic(err)
 				}
-			}`),
+
+				return c
+			}(),
+			schema: func() []byte {
+				s, err := ioutil.ReadFile("../.schema/auditlog.schema.json")
+				if err != nil {
+					panic(err)
+				}
+
+				return s
+			}(),
 			bs:     nil,
 			hasErr: true,
 		},

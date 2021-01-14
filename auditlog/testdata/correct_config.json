@@ -1,0 +1,29 @@
+[
+    {
+        "url_pattern": "http://(localhost|127.0.0.1):8080/return200",
+        "http_method": "GET",
+        "filter": {
+            "request_header": [
+                "User-Agent"
+            ]
+        },
+        "description_template": "Curl GET to localhost returned {{meta.response_code}}"
+    },
+    {
+        "url_pattern": "http://(localhost|127.0.0.1):8080/return200",
+        "http_method": "POST",
+        "filter": {
+            "request_header": [
+                "User-Agent"
+            ],
+            "request_body": [
+                "a.b.c",
+                "d"
+            ],
+            "response_body": [
+                "status"
+            ]
+        },
+        "description_template": "Curl POST to localhost returned {{meta.response_code}}"
+    }
+]
