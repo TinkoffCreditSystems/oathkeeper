@@ -137,10 +137,14 @@ NextWhitelistItem:
 	return result
 }
 
-func filterHeader(h http.Header, wl []string) map[string]string {
-	result := make(map[string]string)
+func filterHeader(h http.Header, wl []string) map[string][]string {
+	result := make(map[string][]string)
+
 	for _, key := range wl {
-		result[key] = h.Get(key)
+		vs := h.Values(key)
+		if len(vs) != 0 {
+			result[key] = vs
+		}
 	}
 
 	return result

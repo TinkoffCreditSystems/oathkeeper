@@ -145,9 +145,9 @@ func TestEventBuilder_Build(t *testing.T) {
 			b:    EventBuilder{},
 			resEvent: Event{
 				Description:    "",
-				RequestHeader:  make(map[string]string),
+				RequestHeader:  make(map[string][]string),
 				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string]string),
+				ResponseHeader: make(map[string][]string),
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
@@ -175,9 +175,9 @@ func TestEventBuilder_Build(t *testing.T) {
 			b:    EventBuilder{},
 			resEvent: Event{
 				Description:    "",
-				RequestHeader:  make(map[string]string),
+				RequestHeader:  make(map[string][]string),
 				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string]string),
+				ResponseHeader: make(map[string][]string),
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
@@ -211,11 +211,51 @@ func TestEventBuilder_Build(t *testing.T) {
 			},
 			resEvent: Event{
 				Description: "",
-				RequestHeader: map[string]string{
-					"User-Agent": "curl",
+				RequestHeader: map[string][]string{
+					"User-Agent": {"curl"},
 				},
 				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string]string),
+				ResponseHeader: make(map[string][]string),
+				ResponseBody:   make(map[string]interface{}),
+
+				Meta: map[string]string{
+					"method":  "GET",
+					"url":     "http://example.com",
+					"user_ip": "",
+				},
+
+				OathkeeperError: nil,
+			},
+			resErr: nil,
+		},
+		{
+			req: func() *http.Request {
+				req, _ := http.NewRequest(
+					"GET",
+					"http://example.com",
+					nil,
+				)
+				req.Header.Add("key1", "val1")
+				req.Header.Add("key1", "val2")
+				req.Header.Add("key2", "val3")
+
+				return req
+			}(),
+			resp: nil,
+			err:  nil,
+			b: EventBuilder{
+				Filter: Filter{
+					RequestHeaderWhiteList: []string{"key1", "key2"},
+				},
+			},
+			resEvent: Event{
+				Description: "",
+				RequestHeader: map[string][]string{
+					"key1": {"val1", "val2"},
+					"key2": {"val3"},
+				},
+				RequestBody:    make(map[string]interface{}),
+				ResponseHeader: make(map[string][]string),
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
@@ -245,9 +285,9 @@ func TestEventBuilder_Build(t *testing.T) {
 			b:    EventBuilder{},
 			resEvent: Event{
 				Description:    "",
-				RequestHeader:  make(map[string]string),
+				RequestHeader:  make(map[string][]string),
 				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string]string),
+				ResponseHeader: make(map[string][]string),
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
@@ -280,13 +320,13 @@ func TestEventBuilder_Build(t *testing.T) {
 			},
 			resEvent: Event{
 				Description:   "",
-				RequestHeader: make(map[string]string),
+				RequestHeader: make(map[string][]string),
 				RequestBody: map[string]interface{}{
 					"a.b.c": "123",
 					"a.e":   "abc",
 					"f":     "42",
 				},
-				ResponseHeader: make(map[string]string),
+				ResponseHeader: make(map[string][]string),
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{

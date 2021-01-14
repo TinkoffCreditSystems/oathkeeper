@@ -146,9 +146,9 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 	proxy.On("RoundTrip", request).Return(response, nil)
 	sender.On("Send", Event{
 		Description:    "",
-		RequestHeader:  map[string]string{"User-Agent": ""},
+		RequestHeader:  map[string][]string{},
 		RequestBody:    map[string]interface{}{},
-		ResponseHeader: map[string]string{},
+		ResponseHeader: map[string][]string{},
 		ResponseBody:   map[string]interface{}{},
 		Meta: map[string]string{
 			"method":      "GET",
