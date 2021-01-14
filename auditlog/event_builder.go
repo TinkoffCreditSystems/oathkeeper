@@ -14,6 +14,7 @@ import (
 	"github.com/ory/gojsonschema"
 	"github.com/ory/oathkeeper/pipeline/authn"
 	"github.com/ory/oathkeeper/proxy"
+	"github.com/tidwall/gjson"
 )
 
 var schemas = packr.New("schemas", "../../.schema")
@@ -105,33 +106,20 @@ func filterBody(b io.Reader, wl []string) map[string]interface{} {
 		return result
 	}
 
-	bb, err := ioutil.ReadAll(b)
+	body, err := ioutil.ReadAll(b)
 	if err != nil {
 		return result
 	}
 
-	var body map[string]interface{}
-	if err = json.Unmarshal(bb, &body); err != nil {
+	if !gjson.ValidBytes(body) {
 		return result
 	}
 
-NextWhitelistItem:
 	for _, key := range wl {
-		var value interface{} = body
-		for _, k := range strings.Split(key, ".") {
-			var ok bool
-
-			m, ok := value.(map[string]interface{})
-			if !ok {
-				continue NextWhitelistItem
-			}
-
-			value, ok = m[k]
-			if !ok {
-				continue NextWhitelistItem
-			}
+		r := gjson.GetBytes(body, key)
+		if r.Exists() {
+			result[key] = r.Value()
 		}
-		result[key] = value
 	}
 
 	return result

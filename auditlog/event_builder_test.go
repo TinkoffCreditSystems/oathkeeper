@@ -339,6 +339,44 @@ func TestEventBuilder_Build(t *testing.T) {
 			},
 			resErr: nil,
 		},
+		{
+			req: func() *http.Request {
+				req, _ := http.NewRequest(
+					"GET",
+					"http://example.com",
+					bytes.NewBuffer([]byte(`{"a": {"b": {"c": 123, "d": "d"}, "e": 2.71828 }, "f": [1, 2, 3] }`)),
+				)
+
+				return req
+			}(),
+			resp: nil,
+			err:  nil,
+			b: EventBuilder{
+				Filter: Filter{
+					RequestBodyWhiteList: []string{"a.b.c", "a.b.not_exists", "a.b.c.not_exists", "a.e", "f"},
+				},
+			},
+			resEvent: Event{
+				Description:   "",
+				RequestHeader: make(map[string][]string),
+				RequestBody: map[string]interface{}{
+					"a.b.c": 123.,
+					"a.e":   2.71828,
+					"f":     []interface{}{1., 2., 3.},
+				},
+				ResponseHeader: make(map[string][]string),
+				ResponseBody:   make(map[string]interface{}),
+
+				Meta: map[string]string{
+					"method":  "GET",
+					"url":     "http://example.com",
+					"user_ip": "",
+				},
+
+				OathkeeperError: nil,
+			},
+			resErr: nil,
+		},
 	}
 
 	for _, tst := range tests {
