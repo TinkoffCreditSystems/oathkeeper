@@ -164,16 +164,16 @@ func DeserializeEventBuildersFromFiles(configPath string) ([]EventBuilder, error
 
 // DeserializeEventBuildersFromBytes validates and deserializes an array of event builders.
 func DeserializeEventBuildersFromBytes(config, schema []byte) ([]EventBuilder, error) {
-	if err := validateJSONConfigSchema(string(config), string(schema)); err != nil {
+	if err := validateJSONConfigSchema(config, schema); err != nil {
 		return nil, err
 	}
 
 	return deserializeJSONConfig(config)
 }
 
-func validateJSONConfigSchema(config, schema string) error {
-	configLoader := gojsonschema.NewStringLoader(config)
-	schemaLoader := gojsonschema.NewStringLoader(schema)
+func validateJSONConfigSchema(config, schema []byte) error {
+	configLoader := gojsonschema.NewBytesLoader(config)
+	schemaLoader := gojsonschema.NewBytesLoader(schema)
 
 	if result, err := gojsonschema.Validate(schemaLoader, configLoader); err != nil {
 		return err
