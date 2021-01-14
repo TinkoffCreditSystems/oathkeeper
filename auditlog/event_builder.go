@@ -41,20 +41,19 @@ type Filter struct {
 func (b *EventBuilder) UnmarshalJSON(raw []byte) error {
 	var err error
 
-	// An additional struct like in rule.go.
-	var bb struct {
-		URLPattern          string `json:"url_pattern"`
-		Method              string `json:"http_method"`
-		Filter              Filter `json:"filter"`
-		DescriptionTemplate string `json:"description_template"`
-		r                   *regexp.Regexp
+	// EventBuilderAlias to prevent an infinite loop while unmarshalling.
+	type EventBuilderAlias EventBuilder
+
+	bb := &struct {
+		*EventBuilderAlias
+	}{
+		EventBuilderAlias: (*EventBuilderAlias)(b),
 	}
 
 	if err = json.Unmarshal(raw, &bb); err != nil {
 		return err
 	}
 
-	*b = bb
 	b.r, err = regexp.Compile(b.URLPattern)
 
 	return err
