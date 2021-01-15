@@ -16,7 +16,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var schemas = packr.New("schemas", "../../.schema")
+var schemas = packr.New("schemas", "../.schema")
 
 const auditLogConfigSchemaPath = "auditlog.schema.json"
 

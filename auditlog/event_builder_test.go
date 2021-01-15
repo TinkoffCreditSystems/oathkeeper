@@ -428,7 +428,7 @@ func TestDeserializeEventBuildersFromBytes(t *testing.T) {
 				return c
 			}(),
 			schema: func() []byte {
-				s, err := ioutil.ReadFile("../.schema/auditlog.schema.json")
+				s, err := schemas.Find(auditLogConfigSchemaPath)
 				if err != nil {
 					panic(err)
 				}
@@ -469,7 +469,7 @@ func TestDeserializeEventBuildersFromBytes(t *testing.T) {
 				return c
 			}(),
 			schema: func() []byte {
-				s, err := ioutil.ReadFile("../.schema/auditlog.schema.json")
+				s, err := schemas.Find(auditLogConfigSchemaPath)
 				if err != nil {
 					panic(err)
 				}
