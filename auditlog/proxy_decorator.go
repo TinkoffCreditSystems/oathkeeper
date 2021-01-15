@@ -1,9 +1,6 @@
 package auditlog
 
 import (
-	"bytes"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/ory/oathkeeper/driver/configuration"
@@ -61,43 +58,29 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 		return nil, errors.New("RoundTrip with nil request")
 	}
 
-	// Copy the request body before the request is sent further.
-	var reqBodyCopy, reqNewBody io.ReadCloser
-	reqNewBody, reqBodyCopy = copyBody(req.Body, d.logger)
+	// Copy request before it is sent further.
+	requestCopy, err := NewRequestWithBytesBody(req)
+	if err != nil {
+		d.logger.WithError(err).Error("Error while copying request")
 
-	if req.Body != nil {
-		req.Body.Close()
+		return nil, err
 	}
 
-	req.Body = reqNewBody
-
 	// Send request.
-	resp, err := d.proxy.RoundTrip(req)
+	resp, reqErr := d.proxy.RoundTrip(req)
 
-	// Deep copy request.
-	reqCopy := req.Clone(req.Context())
-	reqCopy.Body = reqBodyCopy
+	// Copy response.
+	responseCopy, err := NewResponseWithBytesBody(resp)
+	if err != nil {
+		d.logger.WithError(err).Error("Error while copying request")
 
-	// Deep copy response.
-	respCopy := new(http.Response)
-
-	if resp != nil {
-		var respNewBody io.ReadCloser
-
-		*respCopy = *resp
-		respNewBody, respCopy.Body = copyBody(resp.Body, d.logger)
-
-		if resp.Body != nil {
-			resp.Body.Close()
-		}
-
-		resp.Body = respNewBody
+		return nil, err
 	}
 
 	// Log event.
-	go d.saveEvent(reqCopy, respCopy, err)
+	go d.saveEvent(requestCopy, responseCopy, reqErr)
 
-	return resp, err
+	return resp, nil
 }
 
 // Director performs wrapped structure's Director.
@@ -105,30 +88,8 @@ func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
 	d.proxy.Director(r)
 }
 
-func copyBody(rc io.Reader, logger *logrusx.Logger) (a, b io.ReadCloser) {
-	if rc != nil {
-		body, err := ioutil.ReadAll(rc)
-		if err != nil {
-			logger.Error("Error reading request body in RoundTrip")
-		}
-
-		a = ioutil.NopCloser(bytes.NewReader(body))
-
-		b = ioutil.NopCloser(bytes.NewReader(body))
-	}
-
-	return a, b
-}
-
-func (d *ProxyAuditLogDecorator) saveEvent(req *http.Request, resp *http.Response, roundTripError error) {
-	if req.Body != nil {
-		defer req.Body.Close()
-	}
-
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
-
+func (d *ProxyAuditLogDecorator) saveEvent(req *RequestWithBytesBody, resp *ResponseWithBytesBody,
+	roundTripError error) {
 	for _, b := range d.builders {
 		if b.Match(req.URL.String(), req.Method) {
 			if event, err := b.Build(req, resp, roundTripError); err == nil {

@@ -124,7 +124,6 @@ func TestEventBuilder_Build(t *testing.T) {
 		err      error
 		b        EventBuilder
 		resEvent Event
-		resErr   error
 	}{
 		{
 			req:      nil,
@@ -132,15 +131,14 @@ func TestEventBuilder_Build(t *testing.T) {
 			err:      nil,
 			b:        EventBuilder{},
 			resEvent: NewEvent(),
-			resErr:   nil,
 		},
 		{
 			req: func() *http.Request {
-				req, _ := http.NewRequest("GET", "http://example.com", nil)
+				req, _ := http.NewRequest("GET", "http://example.com", ioutil.NopCloser(bytes.NewReader([]byte(""))))
 
 				return req
 			}(),
-			resp: nil,
+			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
@@ -151,14 +149,14 @@ func TestEventBuilder_Build(t *testing.T) {
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
-					"method":  "GET",
-					"url":     "http://example.com",
-					"user_ip": "",
+					"method":      "GET",
+					"url":         "http://example.com",
+					"user_ip":     "",
+					"status_code": "0",
 				},
 
 				OathkeeperError: nil,
 			},
-			resErr: nil,
 		},
 		{
 			req: func() *http.Request {
@@ -170,7 +168,7 @@ func TestEventBuilder_Build(t *testing.T) {
 
 				return req
 			}(),
-			resp: nil,
+			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
@@ -181,28 +179,28 @@ func TestEventBuilder_Build(t *testing.T) {
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
-					"method":  "GET",
-					"url":     "http://example.com",
-					"user_ip": "",
+					"method":      "GET",
+					"url":         "http://example.com",
+					"user_ip":     "",
+					"status_code": "0",
 				},
 
 				OathkeeperError: nil,
 			},
-			resErr: nil,
 		},
 		{
 			req: func() *http.Request {
 				req, _ := http.NewRequest(
 					"GET",
 					"http://example.com",
-					nil,
+					ioutil.NopCloser(bytes.NewReader([]byte(""))),
 				)
 				req.Header.Add("User-Agent", "curl")
 				req.Header.Add("Not-Used", "yes")
 
 				return req
 			}(),
-			resp: nil,
+			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
@@ -219,21 +217,21 @@ func TestEventBuilder_Build(t *testing.T) {
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
-					"method":  "GET",
-					"url":     "http://example.com",
-					"user_ip": "",
+					"method":      "GET",
+					"url":         "http://example.com",
+					"user_ip":     "",
+					"status_code": "0",
 				},
 
 				OathkeeperError: nil,
 			},
-			resErr: nil,
 		},
 		{
 			req: func() *http.Request {
 				req, _ := http.NewRequest(
 					"GET",
 					"http://example.com",
-					nil,
+					ioutil.NopCloser(bytes.NewReader([]byte(""))),
 				)
 				req.Header.Add("key1", "val1")
 				req.Header.Add("key1", "val2")
@@ -241,7 +239,7 @@ func TestEventBuilder_Build(t *testing.T) {
 
 				return req
 			}(),
-			resp: nil,
+			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
@@ -259,28 +257,28 @@ func TestEventBuilder_Build(t *testing.T) {
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
-					"method":  "GET",
-					"url":     "http://example.com",
-					"user_ip": "",
+					"method":      "GET",
+					"url":         "http://example.com",
+					"user_ip":     "",
+					"status_code": "0",
 				},
 
 				OathkeeperError: nil,
 			},
-			resErr: nil,
 		},
 		{
 			req: func() *http.Request {
 				req, _ := http.NewRequest(
 					"GET",
 					"http://example.com",
-					nil,
+					ioutil.NopCloser(bytes.NewReader([]byte(""))),
 				)
 				req = req.WithContext(context.WithValue(req.Context(), proxy.ContextKeySession,
 					&authn.AuthenticationSession{Subject: "user_id_1234"}))
 
 				return req
 			}(),
-			resp: nil,
+			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
@@ -291,15 +289,15 @@ func TestEventBuilder_Build(t *testing.T) {
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
-					"method":  "GET",
-					"url":     "http://example.com",
-					"user_ip": "",
-					"user_id": "user_id_1234",
+					"method":      "GET",
+					"url":         "http://example.com",
+					"user_ip":     "",
+					"user_id":     "user_id_1234",
+					"status_code": "0",
 				},
 
 				OathkeeperError: nil,
 			},
-			resErr: nil,
 		},
 		{
 			req: func() *http.Request {
@@ -311,7 +309,7 @@ func TestEventBuilder_Build(t *testing.T) {
 
 				return req
 			}(),
-			resp: nil,
+			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
@@ -330,14 +328,14 @@ func TestEventBuilder_Build(t *testing.T) {
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
-					"method":  "GET",
-					"url":     "http://example.com",
-					"user_ip": "",
+					"method":      "GET",
+					"url":         "http://example.com",
+					"user_ip":     "",
+					"status_code": "0",
 				},
 
 				OathkeeperError: nil,
 			},
-			resErr: nil,
 		},
 		{
 			req: func() *http.Request {
@@ -349,7 +347,7 @@ func TestEventBuilder_Build(t *testing.T) {
 
 				return req
 			}(),
-			resp: nil,
+			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
@@ -368,21 +366,24 @@ func TestEventBuilder_Build(t *testing.T) {
 				ResponseBody:   make(map[string]interface{}),
 
 				Meta: map[string]string{
-					"method":  "GET",
-					"url":     "http://example.com",
-					"user_ip": "",
+					"method":      "GET",
+					"url":         "http://example.com",
+					"user_ip":     "",
+					"status_code": "0",
 				},
 
 				OathkeeperError: nil,
 			},
-			resErr: nil,
 		},
 	}
 
 	for _, tst := range tests {
-		event, err := tst.b.Build(tst.req, tst.resp, tst.err)
-		assert.Equal(t, tst.resEvent, *event)
+		req, _ := NewRequestWithBytesBody(tst.req)
+		resp, _ := NewResponseWithBytesBody(tst.resp)
+
+		event, err := tst.b.Build(req, resp, tst.err)
 		assert.IsType(t, tst.err, err)
+		assert.Equal(t, tst.resEvent, *event)
 	}
 }
 

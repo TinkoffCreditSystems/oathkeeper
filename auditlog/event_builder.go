@@ -3,7 +3,6 @@ package auditlog
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -66,7 +65,7 @@ func (b *EventBuilder) Match(url, method string) bool {
 }
 
 // Build method performs filtering of data using rules from config.
-func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) (*Event, error) {
+func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesBody, err error) (*Event, error) {
 	e := NewEvent()
 
 	if req != nil {
@@ -99,17 +98,8 @@ func (b *EventBuilder) Build(req *http.Request, resp *http.Response, err error) 
 	return &e, nil
 }
 
-func filterBody(b io.Reader, wl []string) map[string]interface{} {
+func filterBody(body []byte, wl []string) map[string]interface{} {
 	result := make(map[string]interface{})
-
-	if b == nil {
-		return result
-	}
-
-	body, err := ioutil.ReadAll(b)
-	if err != nil {
-		return result
-	}
 
 	if !gjson.ValidBytes(body) {
 		return result

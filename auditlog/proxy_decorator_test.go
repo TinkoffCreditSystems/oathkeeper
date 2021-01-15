@@ -66,8 +66,9 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 		senders  []Sender
 	}{
 		{
-			request:  &http.Request{},
-			response: &http.Response{},
+			request:  nil,
+			response: nil,
+			hasErr:   true,
 			proxy: &MockProxy{
 				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
 					return &http.Response{}, nil
@@ -78,6 +79,41 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 		},
 		{
 			request:  &http.Request{},
+			response: nil,
+			hasErr:   true,
+			proxy: &MockProxy{
+				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+					return &http.Response{}, nil
+				},
+			},
+			builders: []EventBuilder{},
+			senders:  []Sender{},
+		},
+		{
+			request:  &http.Request{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
+			response: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
+			hasErr:   false,
+			proxy: &MockProxy{
+				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+					return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))}, nil
+				},
+			},
+			builders: []EventBuilder{},
+			senders:  []Sender{},
+		},
+		{
+			request:  &http.Request{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
+			response: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
+			proxy: &MockProxy{
+				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+					return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))}, nil
+				},
+			},
+			builders: []EventBuilder{},
+			senders:  []Sender{},
+		},
+		{
+			request:  &http.Request{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			response: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("test")))},
 			proxy: &MockProxy{
 				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
@@ -90,21 +126,29 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 	}
 
 	for _, tst := range tests {
-		decorator := ProxyAuditLogDecorator{proxy: tst.proxy}
+		decorator := ProxyAuditLogDecorator{proxy: tst.proxy, logger: logrusx.New("Testing Logger", "Test")}
 
 		tst.proxy.On("RoundTrip", tst.request).Return(tst.response, nil)
 		resp, err := decorator.RoundTrip(tst.request)
 
 		assert.Equal(t, resp, tst.response)
-		assert.Nil(t, err)
-		tst.proxy.AssertExpectations(t)
 
-		if tst.response.Body != nil {
+		if tst.hasErr {
+			assert.NotNil(t, err)
+		} else {
+			assert.Nil(t, err)
+		}
+
+		if tst.response != nil {
+			tst.proxy.AssertExpectations(t)
+		}
+
+		if tst.response != nil && tst.response.Body != nil {
 			err = tst.response.Body.Close()
 			assert.Nil(t, err)
 		}
 
-		if resp.Body != nil {
+		if resp != nil && resp.Body != nil {
 			err = resp.Body.Close()
 			assert.Nil(t, err)
 		}
@@ -112,7 +156,7 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 }
 
 func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
-	request, _ := http.NewRequest("GET", "http://localhost:8080/return200", nil)
+	request, _ := http.NewRequest("GET", "http://localhost:8080/return200", ioutil.NopCloser(bytes.NewReader([]byte(""))))
 	response := &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("test")))}
 	proxy := &MockProxy{
 		roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
