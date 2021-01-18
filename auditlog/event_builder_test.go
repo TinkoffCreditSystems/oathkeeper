@@ -110,6 +110,12 @@ func TestEventBuilder_Match(t *testing.T) {
 			method: "GET",
 			match:  false,
 		},
+		{
+			b:      EventBuilder{Method: "GET", r: regexp.MustCompile(`^http://.+/api$`)},
+			url:    "http://example.com/api",
+			method: "GET",
+			match:  true,
+		},
 	}
 
 	for _, tst := range tests {
