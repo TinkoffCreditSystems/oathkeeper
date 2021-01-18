@@ -20,6 +20,8 @@ type ResponseWithBytesBody struct {
 	Body []byte
 }
 
+var errorNilReaderGiven = errors.New("nil reader given")
+
 // NewRequestWithBytesBody copies parent http.Request to the new RequestWithBytesBody.
 func NewRequestWithBytesBody(r *http.Request) (*RequestWithBytesBody, error) {
 	if r == nil {
@@ -28,7 +30,7 @@ func NewRequestWithBytesBody(r *http.Request) (*RequestWithBytesBody, error) {
 
 	// Copy parent request body and create new reader.
 	raw, newBody, err := teeReader(r.Body)
-	if err != nil {
+	if err != nil && !errors.Is(err, errorNilReaderGiven) {
 		return nil, err
 	}
 
@@ -60,7 +62,7 @@ func NewResponseWithBytesBody(r *http.Response) (*ResponseWithBytesBody, error) 
 
 func teeReader(rc io.ReadCloser) (raw []byte, newReader io.ReadCloser, err error) {
 	if rc == nil {
-		return nil, nil, errors.New("nil reader given")
+		return nil, nil, errorNilReaderGiven
 	}
 
 	raw, err = ioutil.ReadAll(rc)
