@@ -102,6 +102,10 @@
           "type": "string",
           "description": "A template for event description in human-readable format",
           "examples": "Created group {{request.body.name}} with id {{response.body.id}}"
+        },
+        "class": {
+          "type": "string",
+          "description": "A class of the changed object"
         }
       },
       "additionalProperties": false

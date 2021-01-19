@@ -26,6 +26,7 @@ type EventBuilder struct {
 	Method              string `json:"http_method"`
 	ResponseCodes       []int  `json:"http_response_codes"`
 	Filter              Filter `json:"filter"`
+	Class               string `json:"class"`
 	DescriptionTemplate string `json:"description_template"`
 
 	r *regexp.Regexp
@@ -112,6 +113,7 @@ func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesB
 
 	// TODO(torilov) generate Description.
 	e.Description = ""
+	e.Class = b.Class
 
 	return &e, nil
 }

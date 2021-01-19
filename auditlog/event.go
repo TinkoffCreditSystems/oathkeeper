@@ -2,6 +2,8 @@ package auditlog
 
 // Event is a type for the Audit Log event intermediate representation.
 type Event struct {
+	// Class of the changed object
+	Class string
 	// Description of the event in human-readable format.
 	Description string
 
@@ -18,6 +20,7 @@ type Event struct {
 
 func NewEvent() Event {
 	return Event{
+		Class:            "",
 		Description:      "",
 		RequestHeader:    make(map[string][]string),
 		RequestBody:      make(map[string]interface{}),

@@ -173,6 +173,7 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 				TakeWholeResponseBody:  true,
 			},
 			DescriptionTemplate: "Curl GET to localhost returned {{meta.response_code}}",
+			Class:               "TestClass",
 		},
 	}
 
@@ -191,6 +192,7 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 	proxy.On("RoundTrip", request).Return(response, nil)
 	sender.On("Send", Event{
 		Description:      "",
+		Class:            "TestClass",
 		RequestHeader:    map[string][]string{},
 		RequestBody:      map[string]interface{}{},
 		ResponseHeader:   map[string][]string{},
