@@ -91,7 +91,7 @@ func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
 func (d *ProxyAuditLogDecorator) saveEvent(req *RequestWithBytesBody, resp *ResponseWithBytesBody,
 	roundTripError error) {
 	for _, b := range d.builders {
-		if b.Match(req.URL.String(), req.Method) {
+		if b.Match(req.URL.String(), req.Method, resp.StatusCode) {
 			if event, err := b.Build(req, resp, roundTripError); err == nil {
 				for _, s := range d.senders {
 					s.Send(*event)

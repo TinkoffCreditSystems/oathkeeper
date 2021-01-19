@@ -170,6 +170,7 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 			Method:     "GET",
 			Filter: Filter{
 				RequestHeaderWhiteList: []string{"User-Agent"},
+				TakeWholeResponseBody:  true,
 			},
 			DescriptionTemplate: "Curl GET to localhost returned {{meta.response_code}}",
 		},
@@ -189,11 +190,12 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 
 	proxy.On("RoundTrip", request).Return(response, nil)
 	sender.On("Send", Event{
-		Description:    "",
-		RequestHeader:  map[string][]string{},
-		RequestBody:    map[string]interface{}{},
-		ResponseHeader: map[string][]string{},
-		ResponseBody:   map[string]interface{}{},
+		Description:      "",
+		RequestHeader:    map[string][]string{},
+		RequestBody:      map[string]interface{}{},
+		ResponseHeader:   map[string][]string{},
+		ResponseBody:     map[string]interface{}{},
+		FullResponseBody: []byte("test"),
 		Meta: map[string]string{
 			"method":      "GET",
 			"status_code": "0",

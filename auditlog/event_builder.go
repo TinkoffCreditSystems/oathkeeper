@@ -24,6 +24,7 @@ const auditLogConfigSchemaPath = "auditlog.schema.json"
 type EventBuilder struct {
 	URLPattern          string `json:"url_pattern"`
 	Method              string `json:"http_method"`
+	ResponseCodes       []int  `json:"http_response_codes"`
 	Filter              Filter `json:"filter"`
 	DescriptionTemplate string `json:"description_template"`
 
@@ -35,6 +36,7 @@ type Filter struct {
 	RequestBodyWhiteList    []string `json:"request_body"`
 	ResponseHeaderWhiteList []string `json:"response_header"`
 	ResponseBodyWhiteList   []string `json:"response_body"`
+	TakeWholeResponseBody   bool     `json:"full_response_body"`
 }
 
 // UnmarshalJSON implements the Unmarshaler interface for the EventBuilder struct.
@@ -60,8 +62,20 @@ func (b *EventBuilder) UnmarshalJSON(raw []byte) error {
 }
 
 // Match method verifies if this builder must be applied to request with given url and method.
-func (b *EventBuilder) Match(url, method string) bool {
-	return strings.EqualFold(b.Method, method) && b.r.MatchString(url)
+func (b *EventBuilder) Match(url, method string, statusCode int) bool {
+	responseCodeMatches := len(b.ResponseCodes) == 0 || intInSlice(statusCode, b.ResponseCodes)
+
+	return responseCodeMatches && strings.EqualFold(b.Method, method) && b.r.MatchString(url)
+}
+
+func intInSlice(a int, list []int) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Build method performs filtering of data using rules from config.
@@ -90,6 +104,10 @@ func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesB
 
 		e.ResponseHeader = filterHeader(resp.Header, b.Filter.ResponseHeaderWhiteList)
 		e.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)
+
+		if b.Filter.TakeWholeResponseBody {
+			e.FullResponseBody = resp.Body
+		}
 	}
 
 	// TODO(torilov) generate Description.

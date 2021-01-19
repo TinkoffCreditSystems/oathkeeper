@@ -25,6 +25,17 @@
           "type": "string",
           "description": "Request HTTP method for matching"
         },
+        "http_response_codes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "HTTP response code for matching. Take all if array is empty",
+          "default": [],
+          "examples": [
+            200
+          ]
+        },
         "filter": {
           "type": "object",
           "description": "White List for request context",
@@ -59,6 +70,11 @@
               "items": {
                 "type": "string"
               }
+            },
+            "full_response_body": {
+              "description": "Take the whole response body",
+              "type": "boolean",
+              "default": false
             },
             "meta": {
               "description": "White List for request meta parameters",

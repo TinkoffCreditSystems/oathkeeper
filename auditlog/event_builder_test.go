@@ -57,13 +57,61 @@ func TestEventBuilder_UnmarshalJSON(t *testing.T) {
 
 func TestEventBuilder_Match(t *testing.T) {
 	tests := []struct {
-		b      EventBuilder
-		url    string
-		method string
-		match  bool
+		b          EventBuilder
+		url        string
+		method     string
+		statusCode int
+		match      bool
 	}{
 		{
-			b:      EventBuilder{Method: "GET", r: regexp.MustCompile("^http://(127.0.0.1|localhost):8080/api$")},
+			b: EventBuilder{
+				Method:        "GET",
+				r:             regexp.MustCompile("^http://(127.0.0.1|localhost):8080/api$"),
+				ResponseCodes: []int{http.StatusOK},
+			},
+			url:        "http://localhost:8080/api",
+			method:     "GET",
+			statusCode: http.StatusOK,
+			match:      true,
+		},
+		{
+			b: EventBuilder{
+				Method:        "GET",
+				r:             regexp.MustCompile("^http://(127.0.0.1|localhost):8080/api$"),
+				ResponseCodes: []int{http.StatusOK, http.StatusCreated},
+			},
+			url:        "http://localhost:8080/api",
+			method:     "GET",
+			statusCode: http.StatusOK,
+			match:      true,
+		},
+		{
+			b: EventBuilder{
+				Method:        "GET",
+				r:             regexp.MustCompile("^http://(127.0.0.1|localhost):8080/api$"),
+				ResponseCodes: []int{},
+			},
+			url:        "http://localhost:8080/api",
+			method:     "GET",
+			statusCode: http.StatusOK,
+			match:      true,
+		},
+		{
+			b: EventBuilder{
+				Method:        "GET",
+				r:             regexp.MustCompile("^http://(127.0.0.1|localhost):8080/api$"),
+				ResponseCodes: []int{http.StatusCreated},
+			},
+			url:        "http://localhost:8080/api",
+			method:     "GET",
+			statusCode: http.StatusOK,
+			match:      false,
+		},
+		{
+			b: EventBuilder{
+				Method: "GET",
+				r:      regexp.MustCompile("^http://(127.0.0.1|localhost):8080/api$"),
+			},
 			url:    "http://localhost:8080/api",
 			method: "GET",
 			match:  true,
@@ -119,7 +167,7 @@ func TestEventBuilder_Match(t *testing.T) {
 	}
 
 	for _, tst := range tests {
-		assert.Equal(t, tst.match, tst.b.Match(tst.url, tst.method))
+		assert.Equal(t, tst.match, tst.b.Match(tst.url, tst.method, tst.statusCode))
 	}
 }
 
@@ -148,11 +196,12 @@ func TestEventBuilder_Build(t *testing.T) {
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
-				Description:    "",
-				RequestHeader:  make(map[string][]string),
-				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string][]string),
-				ResponseBody:   make(map[string]interface{}),
+				Description:      "",
+				RequestHeader:    make(map[string][]string),
+				RequestBody:      make(map[string]interface{}),
+				ResponseHeader:   make(map[string][]string),
+				ResponseBody:     make(map[string]interface{}),
+				FullResponseBody: []byte{},
 
 				Meta: map[string]string{
 					"method":      "GET",
@@ -178,11 +227,12 @@ func TestEventBuilder_Build(t *testing.T) {
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
-				Description:    "",
-				RequestHeader:  make(map[string][]string),
-				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string][]string),
-				ResponseBody:   make(map[string]interface{}),
+				Description:      "",
+				RequestHeader:    make(map[string][]string),
+				RequestBody:      make(map[string]interface{}),
+				ResponseHeader:   make(map[string][]string),
+				ResponseBody:     make(map[string]interface{}),
+				FullResponseBody: []byte{},
 
 				Meta: map[string]string{
 					"method":      "GET",
@@ -218,9 +268,10 @@ func TestEventBuilder_Build(t *testing.T) {
 				RequestHeader: map[string][]string{
 					"User-Agent": {"curl"},
 				},
-				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string][]string),
-				ResponseBody:   make(map[string]interface{}),
+				RequestBody:      make(map[string]interface{}),
+				ResponseHeader:   make(map[string][]string),
+				ResponseBody:     make(map[string]interface{}),
+				FullResponseBody: []byte{},
 
 				Meta: map[string]string{
 					"method":      "GET",
@@ -258,9 +309,10 @@ func TestEventBuilder_Build(t *testing.T) {
 					"key1": {"val1", "val2"},
 					"key2": {"val3"},
 				},
-				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string][]string),
-				ResponseBody:   make(map[string]interface{}),
+				RequestBody:      make(map[string]interface{}),
+				ResponseHeader:   make(map[string][]string),
+				ResponseBody:     make(map[string]interface{}),
+				FullResponseBody: []byte{},
 
 				Meta: map[string]string{
 					"method":      "GET",
@@ -288,11 +340,12 @@ func TestEventBuilder_Build(t *testing.T) {
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
-				Description:    "",
-				RequestHeader:  make(map[string][]string),
-				RequestBody:    make(map[string]interface{}),
-				ResponseHeader: make(map[string][]string),
-				ResponseBody:   make(map[string]interface{}),
+				Description:      "",
+				RequestHeader:    make(map[string][]string),
+				RequestBody:      make(map[string]interface{}),
+				ResponseHeader:   make(map[string][]string),
+				ResponseBody:     make(map[string]interface{}),
+				FullResponseBody: []byte{},
 
 				Meta: map[string]string{
 					"method":      "GET",
@@ -330,8 +383,9 @@ func TestEventBuilder_Build(t *testing.T) {
 					"a.e":   "abc",
 					"f":     "42",
 				},
-				ResponseHeader: make(map[string][]string),
-				ResponseBody:   make(map[string]interface{}),
+				ResponseHeader:   make(map[string][]string),
+				ResponseBody:     make(map[string]interface{}),
+				FullResponseBody: []byte{},
 
 				Meta: map[string]string{
 					"method":      "GET",
@@ -368,8 +422,9 @@ func TestEventBuilder_Build(t *testing.T) {
 					"a.e":   2.71828,
 					"f":     []interface{}{1., 2., 3.},
 				},
-				ResponseHeader: make(map[string][]string),
-				ResponseBody:   make(map[string]interface{}),
+				ResponseHeader:   make(map[string][]string),
+				ResponseBody:     make(map[string]interface{}),
+				FullResponseBody: []byte{},
 
 				Meta: map[string]string{
 					"method":      "GET",
