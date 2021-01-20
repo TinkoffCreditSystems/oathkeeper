@@ -69,6 +69,10 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 	// Send request.
 	resp, reqErr := d.proxy.RoundTrip(req)
 
+	if reqErr != nil {
+		return resp, reqErr
+	}
+
 	// Copy response.
 	responseCopy, err := NewResponseWithBytesBody(resp)
 	if err != nil {
@@ -78,7 +82,7 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 	}
 
 	// Log event.
-	go d.saveEvent(requestCopy, responseCopy, reqErr)
+	go d.saveEvent(requestCopy, responseCopy)
 
 	return resp, nil
 }
@@ -88,11 +92,10 @@ func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
 	d.proxy.Director(r)
 }
 
-func (d *ProxyAuditLogDecorator) saveEvent(req *RequestWithBytesBody, resp *ResponseWithBytesBody,
-	roundTripError error) {
+func (d *ProxyAuditLogDecorator) saveEvent(req *RequestWithBytesBody, resp *ResponseWithBytesBody) {
 	for _, b := range d.builders {
 		if b.Match(req.URL.String(), req.Method, resp.StatusCode) {
-			if event, err := b.Build(req, resp, roundTripError); err == nil {
+			if event, err := b.Build(req, resp); err == nil {
 				for _, s := range d.senders {
 					s.Send(*event)
 				}

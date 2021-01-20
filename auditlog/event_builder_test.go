@@ -175,14 +175,12 @@ func TestEventBuilder_Build(t *testing.T) {
 	tests := []struct {
 		req      *http.Request
 		resp     *http.Response
-		err      error
 		b        EventBuilder
 		resEvent Event
 	}{
 		{
 			req:      nil,
 			resp:     nil,
-			err:      nil,
 			b:        EventBuilder{},
 			resEvent: NewEvent(),
 		},
@@ -193,7 +191,6 @@ func TestEventBuilder_Build(t *testing.T) {
 				return req
 			}(),
 			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
-			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
 				Description: "",
@@ -226,7 +223,6 @@ func TestEventBuilder_Build(t *testing.T) {
 				return req
 			}(),
 			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
-			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
 				Description: "",
@@ -261,7 +257,6 @@ func TestEventBuilder_Build(t *testing.T) {
 				return req
 			}(),
 			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
-			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
 					RequestHeaderWhiteList: []string{"User-Agent"},
@@ -303,7 +298,6 @@ func TestEventBuilder_Build(t *testing.T) {
 				return req
 			}(),
 			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
-			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
 					RequestHeaderWhiteList: []string{"key1", "key2"},
@@ -345,7 +339,6 @@ func TestEventBuilder_Build(t *testing.T) {
 				return req
 			}(),
 			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
-			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
 				Description: "",
@@ -379,7 +372,6 @@ func TestEventBuilder_Build(t *testing.T) {
 				return req
 			}(),
 			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
-			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
 					RequestBodyWhiteList: []string{"a.b.c", "a.b.not_exists", "a.b.c.not_exists", "a.e", "f"},
@@ -420,7 +412,6 @@ func TestEventBuilder_Build(t *testing.T) {
 				return req
 			}(),
 			resp: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
-			err:  nil,
 			b: EventBuilder{
 				Filter: Filter{
 					RequestBodyWhiteList: []string{"a.b.c", "a.b.not_exists", "a.b.c.not_exists", "a.e", "f"},
@@ -456,8 +447,8 @@ func TestEventBuilder_Build(t *testing.T) {
 		req, _ := NewRequestWithBytesBody(tst.req)
 		resp, _ := NewResponseWithBytesBody(tst.resp)
 
-		event, err := tst.b.Build(req, resp, tst.err)
-		assert.IsType(t, tst.err, err)
+		event, err := tst.b.Build(req, resp)
+		assert.Nil(t, err)
 		assert.Equal(t, tst.resEvent, *event)
 	}
 }

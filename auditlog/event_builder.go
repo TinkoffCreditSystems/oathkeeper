@@ -80,7 +80,7 @@ func intInSlice(a int, list []int) bool {
 }
 
 // Build method performs filtering of data using rules from config.
-func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesBody, err error) (*Event, error) {
+func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesBody) (*Event, error) {
 	e := NewEvent()
 
 	if req != nil {
@@ -94,10 +94,6 @@ func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesB
 
 		e.Details.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
 		e.Details.RequestBody = filterBody(req.Body, b.Filter.RequestBodyWhiteList)
-	}
-
-	if err != nil {
-		e.Details.OathkeeperError = err
 	}
 
 	if resp != nil {
