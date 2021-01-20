@@ -202,7 +202,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					RequestBody:      make(map[string]interface{}),
 					ResponseHeader:   make(map[string][]string),
 					ResponseBody:     make(map[string]interface{}),
-					FullResponseBody: []byte{},
+					FullResponseBody: struct{}{},
 
 					Meta: map[string]string{
 						"method":      "GET",
@@ -235,7 +235,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					RequestBody:      make(map[string]interface{}),
 					ResponseHeader:   make(map[string][]string),
 					ResponseBody:     make(map[string]interface{}),
-					FullResponseBody: []byte{},
+					FullResponseBody: struct{}{},
 
 					Meta: map[string]string{
 						"method":      "GET",
@@ -276,7 +276,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					RequestBody:      make(map[string]interface{}),
 					ResponseHeader:   make(map[string][]string),
 					ResponseBody:     make(map[string]interface{}),
-					FullResponseBody: []byte{},
+					FullResponseBody: struct{}{},
 
 					Meta: map[string]string{
 						"method":      "GET",
@@ -319,7 +319,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					RequestBody:      make(map[string]interface{}),
 					ResponseHeader:   make(map[string][]string),
 					ResponseBody:     make(map[string]interface{}),
-					FullResponseBody: []byte{},
+					FullResponseBody: struct{}{},
 
 					Meta: map[string]string{
 						"method":      "GET",
@@ -354,7 +354,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					RequestBody:      make(map[string]interface{}),
 					ResponseHeader:   make(map[string][]string),
 					ResponseBody:     make(map[string]interface{}),
-					FullResponseBody: []byte{},
+					FullResponseBody: struct{}{},
 
 					Meta: map[string]string{
 						"method":      "GET",
@@ -396,7 +396,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					},
 					ResponseHeader:   make(map[string][]string),
 					ResponseBody:     make(map[string]interface{}),
-					FullResponseBody: []byte{},
+					FullResponseBody: struct{}{},
 
 					Meta: map[string]string{
 						"method":      "GET",
@@ -437,7 +437,7 @@ func TestEventBuilder_Build(t *testing.T) {
 					},
 					ResponseHeader:   make(map[string][]string),
 					ResponseBody:     make(map[string]interface{}),
-					FullResponseBody: []byte{},
+					FullResponseBody: struct{}{},
 
 					Meta: map[string]string{
 						"method":      "GET",

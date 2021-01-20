@@ -157,10 +157,10 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 
 func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 	request, _ := http.NewRequest("GET", "http://localhost:8080/return200", ioutil.NopCloser(bytes.NewReader([]byte(""))))
-	response := &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("test")))}
+	response := &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte(`{"test": "test"}`)))}
 	proxy := &MockProxy{
 		roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
-			return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("test")))}, nil
+			return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte(`{"test": "test"}`)))}, nil
 		},
 	}
 	builders := []EventBuilder{
@@ -198,7 +198,7 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 			RequestBody:      map[string]interface{}{},
 			ResponseHeader:   map[string][]string{},
 			ResponseBody:     map[string]interface{}{},
-			FullResponseBody: []byte("test"),
+			FullResponseBody: map[string]interface{}{"test": "test"},
 			Meta: map[string]string{
 				"method":      "GET",
 				"status_code": "0",
