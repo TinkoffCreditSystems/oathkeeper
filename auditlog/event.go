@@ -16,7 +16,7 @@ type EventDetails struct {
 	RequestBody      map[string]interface{} `json:"request_body"`
 	ResponseHeader   map[string][]string    `json:"response_header"`
 	ResponseBody     map[string]interface{} `json:"response_body"`
-	FullResponseBody []byte                 `json:"full_response_body"`
+	FullResponseBody interface{}            `json:"full_response_body"`
 	Meta             map[string]string      `json:"meta"`
 
 	OathkeeperError error `json:"oathkeeper_error"`
@@ -31,7 +31,7 @@ func NewEvent() Event {
 			RequestBody:      make(map[string]interface{}),
 			ResponseHeader:   make(map[string][]string),
 			ResponseBody:     make(map[string]interface{}),
-			FullResponseBody: []byte{},
+			FullResponseBody: struct{}{},
 			Meta:             make(map[string]string),
 			OathkeeperError:  nil,
 		},

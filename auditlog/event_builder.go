@@ -107,7 +107,7 @@ func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesB
 		e.Details.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)
 
 		if b.Filter.TakeWholeResponseBody {
-			e.Details.FullResponseBody = resp.Body
+			_ = json.Unmarshal(resp.Body, &e.Details.FullResponseBody)
 		}
 	}
 
