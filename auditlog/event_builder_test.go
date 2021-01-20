@@ -196,21 +196,23 @@ func TestEventBuilder_Build(t *testing.T) {
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
-				Description:      "",
-				RequestHeader:    make(map[string][]string),
-				RequestBody:      make(map[string]interface{}),
-				ResponseHeader:   make(map[string][]string),
-				ResponseBody:     make(map[string]interface{}),
-				FullResponseBody: []byte{},
+				Description: "",
+				Details: EventDetails{
+					RequestHeader:    make(map[string][]string),
+					RequestBody:      make(map[string]interface{}),
+					ResponseHeader:   make(map[string][]string),
+					ResponseBody:     make(map[string]interface{}),
+					FullResponseBody: []byte{},
 
-				Meta: map[string]string{
-					"method":      "GET",
-					"url":         "http://example.com",
-					"user_ip":     "",
-					"status_code": "0",
+					Meta: map[string]string{
+						"method":      "GET",
+						"url":         "http://example.com",
+						"user_ip":     "",
+						"status_code": "0",
+					},
+
+					OathkeeperError: nil,
 				},
-
-				OathkeeperError: nil,
 			},
 		},
 		{
@@ -227,21 +229,23 @@ func TestEventBuilder_Build(t *testing.T) {
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
-				Description:      "",
-				RequestHeader:    make(map[string][]string),
-				RequestBody:      make(map[string]interface{}),
-				ResponseHeader:   make(map[string][]string),
-				ResponseBody:     make(map[string]interface{}),
-				FullResponseBody: []byte{},
+				Description: "",
+				Details: EventDetails{
+					RequestHeader:    make(map[string][]string),
+					RequestBody:      make(map[string]interface{}),
+					ResponseHeader:   make(map[string][]string),
+					ResponseBody:     make(map[string]interface{}),
+					FullResponseBody: []byte{},
 
-				Meta: map[string]string{
-					"method":      "GET",
-					"url":         "http://example.com",
-					"user_ip":     "",
-					"status_code": "0",
+					Meta: map[string]string{
+						"method":      "GET",
+						"url":         "http://example.com",
+						"user_ip":     "",
+						"status_code": "0",
+					},
+
+					OathkeeperError: nil,
 				},
-
-				OathkeeperError: nil,
 			},
 		},
 		{
@@ -265,22 +269,24 @@ func TestEventBuilder_Build(t *testing.T) {
 			},
 			resEvent: Event{
 				Description: "",
-				RequestHeader: map[string][]string{
-					"User-Agent": {"curl"},
-				},
-				RequestBody:      make(map[string]interface{}),
-				ResponseHeader:   make(map[string][]string),
-				ResponseBody:     make(map[string]interface{}),
-				FullResponseBody: []byte{},
+				Details: EventDetails{
+					RequestHeader: map[string][]string{
+						"User-Agent": {"curl"},
+					},
+					RequestBody:      make(map[string]interface{}),
+					ResponseHeader:   make(map[string][]string),
+					ResponseBody:     make(map[string]interface{}),
+					FullResponseBody: []byte{},
 
-				Meta: map[string]string{
-					"method":      "GET",
-					"url":         "http://example.com",
-					"user_ip":     "",
-					"status_code": "0",
-				},
+					Meta: map[string]string{
+						"method":      "GET",
+						"url":         "http://example.com",
+						"user_ip":     "",
+						"status_code": "0",
+					},
 
-				OathkeeperError: nil,
+					OathkeeperError: nil,
+				},
 			},
 		},
 		{
@@ -305,23 +311,25 @@ func TestEventBuilder_Build(t *testing.T) {
 			},
 			resEvent: Event{
 				Description: "",
-				RequestHeader: map[string][]string{
-					"key1": {"val1", "val2"},
-					"key2": {"val3"},
-				},
-				RequestBody:      make(map[string]interface{}),
-				ResponseHeader:   make(map[string][]string),
-				ResponseBody:     make(map[string]interface{}),
-				FullResponseBody: []byte{},
+				Details: EventDetails{
+					RequestHeader: map[string][]string{
+						"key1": {"val1", "val2"},
+						"key2": {"val3"},
+					},
+					RequestBody:      make(map[string]interface{}),
+					ResponseHeader:   make(map[string][]string),
+					ResponseBody:     make(map[string]interface{}),
+					FullResponseBody: []byte{},
 
-				Meta: map[string]string{
-					"method":      "GET",
-					"url":         "http://example.com",
-					"user_ip":     "",
-					"status_code": "0",
-				},
+					Meta: map[string]string{
+						"method":      "GET",
+						"url":         "http://example.com",
+						"user_ip":     "",
+						"status_code": "0",
+					},
 
-				OathkeeperError: nil,
+					OathkeeperError: nil,
+				},
 			},
 		},
 		{
@@ -340,22 +348,24 @@ func TestEventBuilder_Build(t *testing.T) {
 			err:  nil,
 			b:    EventBuilder{},
 			resEvent: Event{
-				Description:      "",
-				RequestHeader:    make(map[string][]string),
-				RequestBody:      make(map[string]interface{}),
-				ResponseHeader:   make(map[string][]string),
-				ResponseBody:     make(map[string]interface{}),
-				FullResponseBody: []byte{},
+				Description: "",
+				Details: EventDetails{
+					RequestHeader:    make(map[string][]string),
+					RequestBody:      make(map[string]interface{}),
+					ResponseHeader:   make(map[string][]string),
+					ResponseBody:     make(map[string]interface{}),
+					FullResponseBody: []byte{},
 
-				Meta: map[string]string{
-					"method":      "GET",
-					"url":         "http://example.com",
-					"user_ip":     "",
-					"user_id":     "user_id_1234",
-					"status_code": "0",
+					Meta: map[string]string{
+						"method":      "GET",
+						"url":         "http://example.com",
+						"user_ip":     "",
+						"user_id":     "user_id_1234",
+						"status_code": "0",
+					},
+
+					OathkeeperError: nil,
 				},
-
-				OathkeeperError: nil,
 			},
 		},
 		{
@@ -376,25 +386,27 @@ func TestEventBuilder_Build(t *testing.T) {
 				},
 			},
 			resEvent: Event{
-				Description:   "",
-				RequestHeader: make(map[string][]string),
-				RequestBody: map[string]interface{}{
-					"a.b.c": "123",
-					"a.e":   "abc",
-					"f":     "42",
-				},
-				ResponseHeader:   make(map[string][]string),
-				ResponseBody:     make(map[string]interface{}),
-				FullResponseBody: []byte{},
+				Description: "",
+				Details: EventDetails{
+					RequestHeader: make(map[string][]string),
+					RequestBody: map[string]interface{}{
+						"a.b.c": "123",
+						"a.e":   "abc",
+						"f":     "42",
+					},
+					ResponseHeader:   make(map[string][]string),
+					ResponseBody:     make(map[string]interface{}),
+					FullResponseBody: []byte{},
 
-				Meta: map[string]string{
-					"method":      "GET",
-					"url":         "http://example.com",
-					"user_ip":     "",
-					"status_code": "0",
-				},
+					Meta: map[string]string{
+						"method":      "GET",
+						"url":         "http://example.com",
+						"user_ip":     "",
+						"status_code": "0",
+					},
 
-				OathkeeperError: nil,
+					OathkeeperError: nil,
+				},
 			},
 		},
 		{
@@ -415,25 +427,27 @@ func TestEventBuilder_Build(t *testing.T) {
 				},
 			},
 			resEvent: Event{
-				Description:   "",
-				RequestHeader: make(map[string][]string),
-				RequestBody: map[string]interface{}{
-					"a.b.c": 123.,
-					"a.e":   2.71828,
-					"f":     []interface{}{1., 2., 3.},
-				},
-				ResponseHeader:   make(map[string][]string),
-				ResponseBody:     make(map[string]interface{}),
-				FullResponseBody: []byte{},
+				Description: "",
+				Details: EventDetails{
+					RequestHeader: make(map[string][]string),
+					RequestBody: map[string]interface{}{
+						"a.b.c": 123.,
+						"a.e":   2.71828,
+						"f":     []interface{}{1., 2., 3.},
+					},
+					ResponseHeader:   make(map[string][]string),
+					ResponseBody:     make(map[string]interface{}),
+					FullResponseBody: []byte{},
 
-				Meta: map[string]string{
-					"method":      "GET",
-					"url":         "http://example.com",
-					"user_ip":     "",
-					"status_code": "0",
-				},
+					Meta: map[string]string{
+						"method":      "GET",
+						"url":         "http://example.com",
+						"user_ip":     "",
+						"status_code": "0",
+					},
 
-				OathkeeperError: nil,
+					OathkeeperError: nil,
+				},
 			},
 		},
 	}

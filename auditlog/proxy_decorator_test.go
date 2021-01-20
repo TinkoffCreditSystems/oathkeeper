@@ -191,19 +191,21 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 
 	proxy.On("RoundTrip", request).Return(response, nil)
 	sender.On("Send", Event{
-		Description:      "",
-		Class:            "TestClass",
-		RequestHeader:    map[string][]string{},
-		RequestBody:      map[string]interface{}{},
-		ResponseHeader:   map[string][]string{},
-		ResponseBody:     map[string]interface{}{},
-		FullResponseBody: []byte("test"),
-		Meta: map[string]string{
-			"method":      "GET",
-			"status_code": "0",
-			"url":         "http://localhost:8080/return200",
-			"user_ip":     "",
-		}, OathkeeperError: error(nil),
+		Description: "",
+		Class:       "TestClass",
+		Details: EventDetails{
+			RequestHeader:    map[string][]string{},
+			RequestBody:      map[string]interface{}{},
+			ResponseHeader:   map[string][]string{},
+			ResponseBody:     map[string]interface{}{},
+			FullResponseBody: []byte("test"),
+			Meta: map[string]string{
+				"method":      "GET",
+				"status_code": "0",
+				"url":         "http://localhost:8080/return200",
+				"user_ip":     "",
+			}, OathkeeperError: error(nil),
+		},
 	}).Return()
 	mx.Lock()
 	resp, err := decorator.RoundTrip(request)

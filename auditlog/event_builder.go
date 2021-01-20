@@ -84,30 +84,30 @@ func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesB
 	e := NewEvent()
 
 	if req != nil {
-		e.Meta["method"] = req.Method
-		e.Meta["url"] = req.URL.String()
-		e.Meta["user_ip"] = req.RemoteAddr
+		e.Details.Meta["method"] = req.Method
+		e.Details.Meta["url"] = req.URL.String()
+		e.Details.Meta["user_ip"] = req.RemoteAddr
 
 		if sess, ok := req.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
-			e.Meta["user_id"] = sess.Subject
+			e.Details.Meta["user_id"] = sess.Subject
 		}
 
-		e.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
-		e.RequestBody = filterBody(req.Body, b.Filter.RequestBodyWhiteList)
+		e.Details.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
+		e.Details.RequestBody = filterBody(req.Body, b.Filter.RequestBodyWhiteList)
 	}
 
 	if err != nil {
-		e.OathkeeperError = err
+		e.Details.OathkeeperError = err
 	}
 
 	if resp != nil {
-		e.Meta["status_code"] = strconv.Itoa(resp.StatusCode)
+		e.Details.Meta["status_code"] = strconv.Itoa(resp.StatusCode)
 
-		e.ResponseHeader = filterHeader(resp.Header, b.Filter.ResponseHeaderWhiteList)
-		e.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)
+		e.Details.ResponseHeader = filterHeader(resp.Header, b.Filter.ResponseHeaderWhiteList)
+		e.Details.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)
 
 		if b.Filter.TakeWholeResponseBody {
-			e.FullResponseBody = resp.Body
+			e.Details.FullResponseBody = resp.Body
 		}
 	}
 
