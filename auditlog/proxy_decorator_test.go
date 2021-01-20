@@ -204,7 +204,7 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 				"status_code": "0",
 				"url":         "http://localhost:8080/return200",
 				"user_ip":     "",
-			}, OathkeeperError: error(nil),
+			},
 		},
 	}).Return()
 	mx.Lock()

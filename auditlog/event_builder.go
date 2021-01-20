@@ -4,11 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 
-	"github.com/ory/oathkeeper/pipeline/authn"
-	"github.com/ory/oathkeeper/proxy"
 	"github.com/tidwall/gjson"
 )
 
@@ -76,20 +73,14 @@ func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesB
 	e := NewEvent()
 
 	if req != nil {
-		e.Details.Meta["method"] = req.Method
-		e.Details.Meta["url"] = req.URL.String()
-		e.Details.Meta["user_ip"] = req.RemoteAddr
-
-		if sess, ok := req.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
-			e.Details.Meta["user_id"] = sess.Subject
-		}
+		e.Details.SetRequestMeta(req)
 
 		e.Details.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
 		e.Details.RequestBody = filterBody(req.Body, b.Filter.RequestBodyWhiteList)
 	}
 
 	if resp != nil {
-		e.Details.Meta["status_code"] = strconv.Itoa(resp.StatusCode)
+		e.Details.SetResponseMeta(resp)
 
 		e.Details.ResponseHeader = filterHeader(resp.Header, b.Filter.ResponseHeaderWhiteList)
 		e.Details.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)

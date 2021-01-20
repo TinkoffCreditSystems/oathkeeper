@@ -1,5 +1,12 @@
 package auditlog
 
+import (
+	"strconv"
+
+	"github.com/ory/oathkeeper/pipeline/authn"
+	"github.com/ory/oathkeeper/proxy"
+)
+
 // Event is a type for the Audit Log event intermediate representation.
 type Event struct {
 	// Class of the changed object
@@ -18,8 +25,6 @@ type EventDetails struct {
 	ResponseBody     map[string]interface{} `json:"response_body"`
 	FullResponseBody interface{}            `json:"full_response_body"`
 	Meta             map[string]string      `json:"meta"`
-
-	OathkeeperError error `json:"oathkeeper_error"`
 }
 
 func NewEvent() Event {
@@ -33,7 +38,22 @@ func NewEvent() Event {
 			ResponseBody:     make(map[string]interface{}),
 			FullResponseBody: struct{}{},
 			Meta:             make(map[string]string),
-			OathkeeperError:  nil,
 		},
 	}
+}
+
+// SetRequestMeta is a setter for Request meta information.
+func (d *EventDetails) SetRequestMeta(r *RequestWithBytesBody) {
+	d.Meta["method"] = r.Method
+	d.Meta["url"] = r.URL.String()
+	d.Meta["user_ip"] = r.RemoteAddr
+
+	if sess, ok := r.Context().Value(proxy.ContextKeySession).(*authn.AuthenticationSession); ok {
+		d.Meta["user_id"] = sess.Subject
+	}
+}
+
+// SetRequestMeta is a setter for Response meta information.
+func (d *EventDetails) SetResponseMeta(r *ResponseWithBytesBody) {
+	d.Meta["status_code"] = strconv.Itoa(r.StatusCode)
 }

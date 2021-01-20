@@ -207,8 +207,6 @@ func TestEventBuilder_Build(t *testing.T) {
 						"user_ip":     "",
 						"status_code": "0",
 					},
-
-					OathkeeperError: nil,
 				},
 			},
 		},
@@ -239,8 +237,6 @@ func TestEventBuilder_Build(t *testing.T) {
 						"user_ip":     "",
 						"status_code": "0",
 					},
-
-					OathkeeperError: nil,
 				},
 			},
 		},
@@ -279,8 +275,6 @@ func TestEventBuilder_Build(t *testing.T) {
 						"user_ip":     "",
 						"status_code": "0",
 					},
-
-					OathkeeperError: nil,
 				},
 			},
 		},
@@ -321,8 +315,6 @@ func TestEventBuilder_Build(t *testing.T) {
 						"user_ip":     "",
 						"status_code": "0",
 					},
-
-					OathkeeperError: nil,
 				},
 			},
 		},
@@ -356,8 +348,6 @@ func TestEventBuilder_Build(t *testing.T) {
 						"user_id":     "user_id_1234",
 						"status_code": "0",
 					},
-
-					OathkeeperError: nil,
 				},
 			},
 		},
@@ -396,8 +386,6 @@ func TestEventBuilder_Build(t *testing.T) {
 						"user_ip":     "",
 						"status_code": "0",
 					},
-
-					OathkeeperError: nil,
 				},
 			},
 		},
@@ -436,8 +424,6 @@ func TestEventBuilder_Build(t *testing.T) {
 						"user_ip":     "",
 						"status_code": "0",
 					},
-
-					OathkeeperError: nil,
 				},
 			},
 		},
