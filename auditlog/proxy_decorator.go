@@ -53,18 +53,15 @@ func NewProxyAuditLogDecoratorFromEventBuilders(proxy *proxy.Proxy, config confi
 // RoundTrip performs wrapped structure's RoundTrip and logs request's event.
 func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req == nil {
-		d.logger.Error("Request is nil")
-
 		return nil, errors.New("RoundTrip with nil request")
 	}
 
-	// Copy request before it is sent further.
-	requestCopy, err := NewRequestWithBytesBody(req)
+	body, err := NewReadCloserWithBuffer(req.Body)
 	if err != nil {
-		d.logger.WithError(err).Error("Error while copying request")
-
 		return nil, err
 	}
+
+	req.Body = body
 
 	// Send request.
 	resp, reqErr := d.proxy.RoundTrip(req)
@@ -73,16 +70,10 @@ func (d *ProxyAuditLogDecorator) RoundTrip(req *http.Request) (*http.Response, e
 		return resp, reqErr
 	}
 
-	// Copy response.
-	responseCopy, err := NewResponseWithBytesBody(resp)
-	if err != nil {
-		d.logger.WithError(err).Error("Error while copying request")
-
-		return nil, err
-	}
+	resp.Body, _ = NewReadCloserWithBuffer(resp.Body)
 
 	// Log event.
-	go d.saveEvent(requestCopy, responseCopy)
+	go d.saveEvent(req, resp)
 
 	return resp, nil
 }
@@ -92,7 +83,7 @@ func (d *ProxyAuditLogDecorator) Director(r *http.Request) {
 	d.proxy.Director(r)
 }
 
-func (d *ProxyAuditLogDecorator) saveEvent(req *RequestWithBytesBody, resp *ResponseWithBytesBody) {
+func (d *ProxyAuditLogDecorator) saveEvent(req *http.Request, resp *http.Response) {
 	for _, b := range d.builders {
 		if b.Match(req.URL.String(), req.Method, resp.StatusCode) {
 			if event, err := b.Build(req, resp); err == nil {

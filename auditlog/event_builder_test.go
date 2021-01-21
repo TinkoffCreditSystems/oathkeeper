@@ -179,12 +179,6 @@ func TestEventBuilder_Build(t *testing.T) {
 		resEvent Event
 	}{
 		{
-			req:      nil,
-			resp:     nil,
-			b:        EventBuilder{},
-			resEvent: NewEvent(),
-		},
-		{
 			req: func() *http.Request {
 				req, _ := http.NewRequest("GET", "http://example.com", ioutil.NopCloser(bytes.NewReader([]byte(""))))
 
@@ -430,10 +424,23 @@ func TestEventBuilder_Build(t *testing.T) {
 	}
 
 	for _, tst := range tests {
-		req, _ := NewRequestWithBytesBody(tst.req)
-		resp, _ := NewResponseWithBytesBody(tst.resp)
+		reqBody, err := NewReadCloserWithBuffer(tst.req.Body)
+		assert.Nil(t, err)
 
-		event, err := tst.b.Build(req, resp)
+		tst.req.Body = reqBody
+		respBody, err := NewReadCloserWithBuffer(tst.resp.Body)
+
+		assert.Nil(t, err)
+
+		tst.resp.Body = respBody
+
+		_, _ = ioutil.ReadAll(tst.req.Body)
+		_ = tst.req.Body.Close()
+		_, _ = ioutil.ReadAll(tst.resp.Body)
+		_ = tst.resp.Body.Close()
+
+		event, err := tst.b.Build(tst.req, tst.resp)
+
 		assert.Nil(t, err)
 		assert.Equal(t, tst.resEvent, *event)
 	}

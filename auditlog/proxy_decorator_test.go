@@ -61,6 +61,7 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 		request  *http.Request
 		response *http.Response
 		hasErr   bool
+		expect   []byte
 		proxy    *MockProxy
 		builders []EventBuilder
 		senders  []Sender
@@ -71,6 +72,9 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 			hasErr:   true,
 			proxy: &MockProxy{
 				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+					_, _ = ioutil.ReadAll(r.Body)
+					_ = r.Body.Close()
+
 					return &http.Response{}, nil
 				},
 			},
@@ -83,7 +87,10 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 			hasErr:   true,
 			proxy: &MockProxy{
 				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
-					return &http.Response{}, nil
+					_, _ = ioutil.ReadAll(r.Body)
+					_ = r.Body.Close()
+
+					return new(http.Response), nil
 				},
 			},
 			builders: []EventBuilder{},
@@ -93,8 +100,12 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 			request:  &http.Request{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			response: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			hasErr:   false,
+			expect:   []byte(""),
 			proxy: &MockProxy{
 				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+					_, _ = ioutil.ReadAll(r.Body)
+					_ = r.Body.Close()
+
 					return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))}, nil
 				},
 			},
@@ -104,8 +115,13 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 		{
 			request:  &http.Request{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			response: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
+			hasErr:   false,
+			expect:   []byte(""),
 			proxy: &MockProxy{
 				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+					_, _ = ioutil.ReadAll(r.Body)
+					_ = r.Body.Close()
+
 					return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))}, nil
 				},
 			},
@@ -115,8 +131,13 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 		{
 			request:  &http.Request{Body: ioutil.NopCloser(bytes.NewReader([]byte("")))},
 			response: &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("test")))},
+			hasErr:   false,
+			expect:   []byte("test"),
 			proxy: &MockProxy{
 				roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+					_, _ = ioutil.ReadAll(r.Body)
+					_ = r.Body.Close()
+
 					return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte("test")))}, nil
 				},
 			},
@@ -131,26 +152,19 @@ func TestProxyAuditLogDecorator_RoundTrip(t *testing.T) {
 		tst.proxy.On("RoundTrip", tst.request).Return(tst.response, nil)
 		resp, err := decorator.RoundTrip(tst.request)
 
-		assert.Equal(t, resp, tst.response)
-
 		if tst.hasErr {
 			assert.NotNil(t, err)
 		} else {
+			assert.Nil(t, err)
+			raw, err := ioutil.ReadAll(resp.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, tst.expect, raw)
+			err = resp.Body.Close()
 			assert.Nil(t, err)
 		}
 
 		if tst.response != nil {
 			tst.proxy.AssertExpectations(t)
-		}
-
-		if tst.response != nil && tst.response.Body != nil {
-			err = tst.response.Body.Close()
-			assert.Nil(t, err)
-		}
-
-		if resp != nil && resp.Body != nil {
-			err = resp.Body.Close()
-			assert.Nil(t, err)
 		}
 	}
 }
@@ -160,6 +174,9 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 	response := &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte(`{"test": "test"}`)))}
 	proxy := &MockProxy{
 		roundTrip: func(t *testing.T, r *http.Request) (*http.Response, error) {
+			_, _ = ioutil.ReadAll(r.Body)
+			_ = r.Body.Close()
+
 			return &http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte(`{"test": "test"}`)))}, nil
 		},
 	}
@@ -210,20 +227,14 @@ func TestProxyAuditLogDecorator_RoundTrip2(t *testing.T) {
 	mx.Lock()
 	resp, err := decorator.RoundTrip(request)
 
+	assert.Nil(t, err)
+	_, err = ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	err = resp.Body.Close()
+	assert.Nil(t, err)
+
 	mx.Lock()
 	defer mx.Unlock()
-	assert.Equal(t, resp, response)
-	assert.Nil(t, err)
 	proxy.AssertExpectations(t)
 	sender.AssertExpectations(t)
-
-	if response.Body != nil {
-		err = response.Body.Close()
-		assert.Nil(t, err)
-	}
-
-	if resp.Body != nil {
-		err = resp.Body.Close()
-		assert.Nil(t, err)
-	}
 }

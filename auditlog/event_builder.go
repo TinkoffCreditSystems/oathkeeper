@@ -69,24 +69,26 @@ func intInSlice(a int, list []int) bool {
 }
 
 // Build method performs filtering of data using rules from config.
-func (b *EventBuilder) Build(req *RequestWithBytesBody, resp *ResponseWithBytesBody) (*Event, error) {
+func (b *EventBuilder) Build(req *http.Request, resp *http.Response) (*Event, error) {
 	e := NewEvent()
 
 	if req != nil {
 		e.Details.SetRequestMeta(req)
 
 		e.Details.RequestHeader = filterHeader(req.Header, b.Filter.RequestHeaderWhiteList)
-		e.Details.RequestBody = filterBody(req.Body, b.Filter.RequestBodyWhiteList)
+		e.Details.RequestBody = filterBody(req.Body.(*ReadCloserWithBuffer).GetBufBlocking(), b.Filter.RequestBodyWhiteList)
 	}
 
 	if resp != nil {
 		e.Details.SetResponseMeta(resp)
 
 		e.Details.ResponseHeader = filterHeader(resp.Header, b.Filter.ResponseHeaderWhiteList)
-		e.Details.ResponseBody = filterBody(resp.Body, b.Filter.ResponseBodyWhiteList)
+		e.Details.ResponseBody = filterBody(
+			resp.Body.(*ReadCloserWithBuffer).GetBufBlocking(), b.Filter.ResponseBodyWhiteList,
+		)
 
 		if b.Filter.TakeWholeResponseBody {
-			_ = json.Unmarshal(resp.Body, &e.Details.FullResponseBody)
+			_ = json.Unmarshal(resp.Body.(*ReadCloserWithBuffer).GetBufBlocking(), &e.Details.FullResponseBody)
 		}
 	}
 

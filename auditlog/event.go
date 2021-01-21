@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/ory/oathkeeper/pipeline/authn"
@@ -43,7 +44,7 @@ func NewEvent() Event {
 }
 
 // SetRequestMeta is a setter for Request meta information.
-func (d *EventDetails) SetRequestMeta(r *RequestWithBytesBody) {
+func (d *EventDetails) SetRequestMeta(r *http.Request) {
 	d.Meta["method"] = r.Method
 	d.Meta["url"] = r.URL.String()
 	d.Meta["user_ip"] = r.RemoteAddr
@@ -54,6 +55,6 @@ func (d *EventDetails) SetRequestMeta(r *RequestWithBytesBody) {
 }
 
 // SetRequestMeta is a setter for Response meta information.
-func (d *EventDetails) SetResponseMeta(r *ResponseWithBytesBody) {
+func (d *EventDetails) SetResponseMeta(r *http.Response) {
 	d.Meta["status_code"] = strconv.Itoa(r.StatusCode)
 }
