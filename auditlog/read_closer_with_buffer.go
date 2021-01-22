@@ -24,12 +24,13 @@ func NewReadCloserWithBuffer(closer io.ReadCloser) (*ReadCloserWithBuffer, error
 	}
 
 	rc := &ReadCloserWithBuffer{
-		rc:      closer,
-		buffer:  &[]byte{},
-		m:       new(sync.RWMutex),
+		rc:     closer,
+		buffer: &[]byte{},
+		m:      new(sync.RWMutex),
 	}
 
 	rc.m.Lock()
+
 	return rc, nil
 }
 
