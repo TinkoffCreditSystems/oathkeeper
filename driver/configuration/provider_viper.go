@@ -118,6 +118,15 @@ const (
 	ViperKeyErrorsWWWAuthenticateIsEnabled = ViperKeyErrors + ".www_authenticate.enabled"
 )
 
+// AuditLog
+const (
+	ViperAuditLogEnabled      = "auditlog.enabled"
+	ViperAuditLogConfigPath   = "auditlog.config"
+	ViperAuditLogKafkaEnabled = "auditlog.kafka.enabled"
+	ViperAuditLogKafkaURL     = "auditlog.kafka.url"
+	ViperAuditLogKafkaTopic   = "auditlog.kafka.topic"
+)
+
 type ViperProvider struct {
 	l *logrusx.Logger
 
@@ -435,4 +444,24 @@ func (v *ViperProvider) TracingJaegerConfig() *tracing.JaegerConfig {
 			viperx.GetString(v.l, "tracing.providers.jaeger.propagation", "", "TRACING_PROVIDER_JAEGER_PROPAGATION"),
 		),
 	}
+}
+
+func (v *ViperProvider) AuditLogEnabled() bool {
+	return viperx.GetBool(v.l, ViperAuditLogEnabled, false)
+}
+
+func (v *ViperProvider) AuditLogConfigPath() string {
+	return viperx.GetString(v.l, ViperAuditLogConfigPath, "")
+}
+
+func (v *ViperProvider) AuditLogKafkaEnabled() bool {
+	return viperx.GetBool(v.l, ViperAuditLogKafkaEnabled, false)
+}
+
+func (v *ViperProvider) AuditLogKafkaURL() string {
+	return viperx.GetString(v.l, ViperAuditLogKafkaURL, "")
+}
+
+func (v *ViperProvider) AuditLogKafkaTopic() string {
+	return viperx.GetString(v.l, ViperAuditLogKafkaTopic, "")
 }

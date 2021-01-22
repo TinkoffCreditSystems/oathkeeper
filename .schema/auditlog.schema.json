@@ -1,0 +1,114 @@
+{
+  "title": "Oathkeeper Audit Log Configuration",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/EventHandler"
+  },
+  "default": [],
+  "uniqueItems": true,
+  "definitions": {
+    "EventHandler": {
+      "description": "EventHandler is a handler for single event",
+      "type": "object",
+      "required": [
+        "url_pattern",
+        "http_method",
+        "filter",
+        "description_template"
+      ],
+      "properties": {
+        "url_pattern": {
+          "type": "string",
+          "description": "Regexp pattern for matching request URL"
+        },
+        "http_method": {
+          "type": "string",
+          "description": "Request HTTP method for matching"
+        },
+        "http_response_codes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "HTTP response code for matching. Take all if array is empty",
+          "default": [],
+          "examples": [
+            200
+          ]
+        },
+        "filter": {
+          "type": "object",
+          "description": "White List for request context",
+          "properties": {
+            "request_header": {
+              "description": "White List for request header parameters",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "examples": [
+                  "User-Agent"
+                ]
+              }
+            },
+            "request_body": {
+              "description": "White List for request body parameters",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "response_header": {
+              "description": "White List for response header parameters",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "response_body": {
+              "description": "White List for response body parameters",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "full_response_body": {
+              "description": "Take the whole response body",
+              "type": "boolean",
+              "default": false
+            },
+            "meta": {
+              "description": "White List for request meta parameters",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "user_ip",
+                  "request_url",
+                  "request_method",
+                  "response_code"
+                ]
+              },
+              "default": [
+                "user_ip",
+                "request_url",
+                "request_method",
+                "response_code"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "description_template": {
+          "type": "string",
+          "description": "A template for event description in human-readable format",
+          "examples": "Created group {{request.body.name}} with id {{response.body.id}}"
+        },
+        "class": {
+          "type": "string",
+          "description": "A class of the changed object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
