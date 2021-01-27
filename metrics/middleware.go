@@ -90,7 +90,7 @@ func (m *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 	res := rw.(negroni.ResponseWriter)
 
 	if _, silent := m.silencePaths[r.URL.Path]; !silent {
-		requestURI := r.RequestURI
+		requestURI := r.URL.Path
 		if m.collapsePaths {
 			requestURI = m.getFirstPathSegment(requestURI)
 		}
